@@ -52,8 +52,13 @@ using namespace std::chrono_literals;
 #define ADDR_OPERATING_MODE 11
 #define ADDR_TORQUE_ENABLE 64
 #define ADDR_GOAL_POSITION 116
+#define ADDR_PROFILE_VELOCITY 112
 #define ADDR_PRESENT_POSITION 132
 #define ADDR_PRESENT_CURRENT 126
+
+#define OPERATING_MODE_CURRENT 0
+#define OPERATING_MODE_VELOCITY 1
+#define OPERATING_MODE_POSITION 3
 
 // Data Byte Length
 #define LENGTH_GOAL_POSITION 4
@@ -65,8 +70,11 @@ using namespace std::chrono_literals;
 
 // Default setting
 #define BAUDRATE 3000000           // Default Baudrate of DYNAMIXEL X series
-#define DEVICE_NAME "/dev/ttyUSB1" // [Linux]: "/dev/ttyUSB*", [Windows]: "COM*"
+#define DEVICE_NAME "/dev/ttyUSB0" // [Linux]: "/dev/ttyUSB*", [Windows]: "COM*"
 #define JN 7
+#define MAX_DATA 10000
+
+#define ESC_ASCII_VALUE 0x1b
 
 dynamixel::PortHandler *portHandler = dynamixel::PortHandler::getPortHandler(DEVICE_NAME);
 dynamixel::PacketHandler *packetHandler = dynamixel::PacketHandler::getPacketHandler(PROTOCOL_VERSION);
@@ -76,12 +84,50 @@ dynamixel::GroupSyncRead groupSyncRead(portHandler, packetHandler, ADDR_PRESENT_
 
 uint8_t dxl_id[7] = {2, 3, 4, 5, 6, 7, 8};
 uint8_t dxl_error = 0;
-uint32_t dxl_goal_position = 400; // Goal position
+uint32_t dxl_goal_position = 0; // Goal position
 int dxl_comm_result = COMM_TX_FAIL;
 bool dxl_addparam_result = false; // addParam result
 bool dxl_getdata_result = false;  // GetParam result
 
 const int ms = 5;
+
+// Position Value of X series is 4 byte data.
+// For AX & MX(1.0) use 2 byte data(uint16_t) for the Position Value.
+uint32_t goal_position[JN][MAX_DATA];
+uint8_t param_goal_position[JN][4];
+uint8_t param_goal_position1[4];
+
+int present_position[JN][MAX_DATA];
+int present_current[JN][MAX_DATA];
+
+// Frequency wave
+float Fc_1[] = {0.1166, 0.1263, 0.1451, 0.1602, 0.1654, 0.1689, 0.1748};
+float Fc_2[] = {0.2084, 0.2152, 0.2229, 0.2538, 0.2826, 0.2913, 0.2996};
+float Fc_3[] = {0.3005, 0.3289, 0.3396, 0.3725, 0.4169, 0.5341, 0.5826};
+// float Fc_1[] = {0.0166, 0.0263, 0.0451, 0.0602, 0.0654, 0.0689, 0.0748};
+// float Fc_2[] = {0.1084, 0.1152, 0.1229, 0.1538, 0.1826, 0.1913, 0.1996};
+// float Fc_3[] = {0.2005, 0.2289, 0.2396, 0.2725, 0.3169, 0.4341, 0.4826};
+
+// Amplitude
+float A_1[] = {65, 8, 65, 55, 65, 35, 65};
+float A_2[] = {-65, -8, -65, -55, -65, -35, -65};
+// float A_1[] = { 45,  8,  45,  45,  45,  35,  45};
+// float A_2[] = {-45, -8, -45, -45, -45, -35, -45};
+
+float A_3[JN];
+
+int i;
+int j;
+int count = 1;
+
+int Fs = 1;
+float dt = 1 / Fs;
+float StopTime = 0.25;
+double t[MAX_DATA];
+
+double th[JN][MAX_DATA];
+double th_d[JN][MAX_DATA];
+double th_dd[JN][MAX_DATA];
 
 double deg_to_rad(double deg)
 {
@@ -107,7 +153,7 @@ void setupDynamixel(uint8_t dxl_id)
         portHandler,
         dxl_id,
         ADDR_OPERATING_MODE,
-        3,
+        OPERATING_MODE_POSITION,
         &dxl_error);
 
     if (dxl_comm_result != COMM_SUCCESS)
@@ -142,48 +188,100 @@ double map_range(double value, double in_min, double in_max, double out_min, dou
     return (value - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
-int main(int argc, char *argv[])
+void safe_start(int velocity, double init_pos[JN][MAX_DATA])
 {
-    uint8_t dxl_error = 0;
+    // Set profile Velocity of DYNAMIXEL
+    packetHandler->write4ByteTxRx(
+        portHandler,
+        BROADCAST_ID,
+        ADDR_PROFILE_VELOCITY,
+        velocity,
+        &dxl_error);
 
-    // Position Value of X series is 4 byte data.
-    // For AX & MX(1.0) use 2 byte data(uint16_t) for the Position Value.
-    uint32_t goal_position = 400;
-
-    int present_position[JN][1000];
-    int present_current[JN][1000];
-
-    // Frequency wave
-    float Fc_1[] = {0.1166, 0.1263, 0.1451, 0.1602, 0.1654, 0.1689, 0.1748};
-    float Fc_2[] = {0.2084, 0.2152, 0.2229, 0.2538, 0.2826, 0.2913, 0.2996};
-    float Fc_3[] = {0.3005, 0.3289, 0.3396, 0.3725, 0.4169, 0.5341, 0.5826};
-
-    // Amplitude
-    float A_1[] = {65, 8, 65, 55, 65, 35, 65};
-    float A_2[] = {-65, -8, -65, -55, -65, -35, -65};
-    float A_3[7];
-
-    int i;
-    int j;
-    int count = 1;
-
-    int Fs = 1;
-    float dt = 1 / Fs;
-    float StopTime = 0.25;
-    double t[10000];
-
-    double th[7][10000];
-    double th_d[7][10000];
-    double th_dd[7][10000];
+    int j = 0;
 
     for (i = 0; i < 7; i++)
     {
+        if (i == 3)
+        {
+            // Allocate goal position value into byte array
+            param_goal_position[i][0] = DXL_LOBYTE(DXL_LOWORD((int)map_range(init_pos[i][j], -180, 180, 768, 2048)));
+            param_goal_position[i][1] = DXL_HIBYTE(DXL_LOWORD((int)map_range(init_pos[i][j], -180, 180, 768, 2048)));
+            param_goal_position[i][2] = DXL_LOBYTE(DXL_HIWORD((int)map_range(init_pos[i][j], -180, 180, 768, 2048)));
+            param_goal_position[i][3] = DXL_HIBYTE(DXL_HIWORD((int)map_range(init_pos[i][j], -180, 180, 768, 2048)));
+        }
+        else
+        {
+            // Allocate goal position value into byte array
+            param_goal_position[i][0] = DXL_LOBYTE(DXL_LOWORD((int)map_range(init_pos[i][j], -180, 180, 0, 4096)));
+            param_goal_position[i][1] = DXL_HIBYTE(DXL_LOWORD((int)map_range(init_pos[i][j], -180, 180, 0, 4096)));
+            param_goal_position[i][2] = DXL_LOBYTE(DXL_HIWORD((int)map_range(init_pos[i][j], -180, 180, 0, 4096)));
+            param_goal_position[i][3] = DXL_HIBYTE(DXL_HIWORD((int)map_range(init_pos[i][j], -180, 180, 0, 4096)));
+        }
+
+        // std::cout << param_goal_position[i][0] << std::endl;
+    }
+
+    for (i = 0; i < 7; i++)
+    {
+        dxl_addparam_result = groupSyncWrite.addParam(dxl_id[i], param_goal_position[i]);
+
+        if (dxl_addparam_result != true)
+        {
+            RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncWrite addparam failed", dxl_id[i]);
+        }
+
+        // std::cout << param_goal_position[i] << std::endl;
+    }
+
+    // Syncwrite goal position
+    dxl_comm_result = groupSyncWrite.txPacket();
+    if (dxl_comm_result != COMM_SUCCESS)
+        packetHandler->getTxRxResult(dxl_comm_result);
+
+    if (dxl_comm_result != COMM_SUCCESS)
+    {
+        RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "%s", packetHandler->getTxRxResult(dxl_comm_result));
+    }
+    else if (dxl_error != 0)
+    {
+        RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "%s", packetHandler->getRxPacketError(dxl_error));
+    }
+    else
+    {
+        RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "Set [I: %d]", j);
+    }
+
+    // Clear syncwrite parameter storage
+    groupSyncWrite.clearParam();
+
+    usleep(7000000);
+
+    // Set profile Velocity of DYNAMIXEL
+    packetHandler->write4ByteTxRx(
+        portHandler,
+        BROADCAST_ID,
+        ADDR_PROFILE_VELOCITY,
+        (int)0,
+        &dxl_error);
+}
+
+int main(int argc, char *argv[])
+{
+    // Create log file
+    std::ofstream data;
+
+    data.open("data.csv");
+
+    // Parameters Signal
+    for (i = 0; i < 7; i++)
+    {
         A_3[i] = (-A_1[i] * Fc_1[i] - A_2[i] * Fc_2[i]) / Fc_3[i];
-        //std::cout << A_3[i] << std::endl;
+        // std::cout << A_3[i] << syd::endl;
     }
 
     t[0] = 0;
-    for (i = 1; i <= 10000; i++)
+    for (i = 1; i <= MAX_DATA; i++)
     {
         t[i] = t[i - 1] + 0.1;
         // std::cout << t[i] << std::endl;
@@ -199,40 +297,138 @@ int main(int argc, char *argv[])
 
     for (j = 0; j < 7; j++)
     {
-        for (i = 1; i <= 10000; i++)
+        for (i = 1; i <= MAX_DATA; i++)
         {
             th[j][i] = A_1[j] * sin_deg(2 * M_PI * Fc_1[j] * t[i]) + A_2[j] * sin_deg(2 * M_PI * Fc_2[j] * t[i]) + A_3[j] * sin_deg(2 * M_PI * Fc_3[j] * t[i]);
             th_d[j][i] = A_1[j] * Fc_1[j] * cos_deg(2 * M_PI * Fc_1[j] * t[i]) + A_2[j] * Fc_2[j] * cos_deg(2 * M_PI * Fc_2[j] * t[i]) + A_3[j] * Fc_3[j] * cos_deg(2 * M_PI * Fc_3[j] * t[i]);
             th_d[j][i] = -(A_1[j] * pow(Fc_1[j], 2) * sin_deg(2 * M_PI * Fc_1[j] * t[i]) + A_2[j] * pow(Fc_2[j], 2) * sin_deg(2 * M_PI * Fc_2[j] * t[i]) + A_3[j] * pow(Fc_3[j], 2) * sin_deg(2 * M_PI * Fc_3[j] * t[i]));
-            std::cout << th[j][i] << std::endl;
+            // std::cout << th[j][i] << std::endl;
         }
     }
 
-    // // Open Serial Port
-    // dxl_comm_result = portHandler->openPort();
-    // if (dxl_comm_result == false)
-    // {
-    //     RCLCPP_ERROR(rclcpp::get_logger("obtain_data_node"), "Failed to open the port!");
-    //     return -1;
-    // }
-    // else
-    // {
-    //     RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "Succeeded to open the port.");
-    // }
+    // Open Serial Port
+    dxl_comm_result = portHandler->openPort();
+    if (dxl_comm_result == false)
+    {
+        RCLCPP_ERROR(rclcpp::get_logger("obtain_data_node"), "Failed to open the port!");
+        return -1;
+    }
+    else
+    {
+        RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "Succeeded to open the port.");
+    }
 
-    // // Set the baudrate of the serial port (use DYNAMIXEL Baudrate)
-    // dxl_comm_result = portHandler->setBaudRate(BAUDRATE);
-    // if (dxl_comm_result == false)
-    // {
-    //     RCLCPP_ERROR(rclcpp::get_logger("obtain_data_node"), "Failed to set the baudrate!");
-    //     return -1;
-    // }
-    // else
-    // {
-    //     RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "Succeeded to set the baudrate.");
-    // }
+    // Set the baudrate of the serial port (use DYNAMIXEL Baudrate)
+    dxl_comm_result = portHandler->setBaudRate(BAUDRATE);
+    if (dxl_comm_result == false)
+    {
+        RCLCPP_ERROR(rclcpp::get_logger("obtain_data_node"), "Failed to set the baudrate!");
+        return -1;
+    }
+    else
+    {
+        RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "Succeeded to set the baudrate.");
+    }
 
-    // setupDynamixel(BROADCAST_ID);
+    setupDynamixel(BROADCAST_ID);
+
+    for (j = 0; j < 7; j++)
+    {
+        dxl_addparam_result = groupSyncRead.addParam(dxl_id[j]);
+        if (dxl_addparam_result != true)
+        {
+            RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead addparam failed", dxl_id[j]);
+            return 0;
+        }
+    }
+
+    safe_start(20, th);
+
+    for (j = 0; j < MAX_DATA; j++)
+    {
+        for (i = 0; i < 7; i++)
+        {
+            if (i == 3)
+            {
+                // Allocate goal position value into byte array
+                param_goal_position[i][0] = DXL_LOBYTE(DXL_LOWORD((int)map_range(th[i][j], -180, 180, 768, 2048)));
+                param_goal_position[i][1] = DXL_HIBYTE(DXL_LOWORD((int)map_range(th[i][j], -180, 180, 768, 2048)));
+                param_goal_position[i][2] = DXL_LOBYTE(DXL_HIWORD((int)map_range(th[i][j], -180, 180, 768, 2048)));
+                param_goal_position[i][3] = DXL_HIBYTE(DXL_HIWORD((int)map_range(th[i][j], -180, 180, 768, 2048)));
+            }
+            else
+            {
+                // Allocate goal position value into byte array
+                param_goal_position[i][0] = DXL_LOBYTE(DXL_LOWORD((int)map_range(th[i][j], -180, 180, 0, 4096)));
+                param_goal_position[i][1] = DXL_HIBYTE(DXL_LOWORD((int)map_range(th[i][j], -180, 180, 0, 4096)));
+                param_goal_position[i][2] = DXL_LOBYTE(DXL_HIWORD((int)map_range(th[i][j], -180, 180, 0, 4096)));
+                param_goal_position[i][3] = DXL_HIBYTE(DXL_HIWORD((int)map_range(th[i][j], -180, 180, 0, 4096)));
+            }
+
+            // std::cout << param_goal_position[i][0] << std::endl;
+        }
+
+        for (i = 0; i < 7; i++)
+        {
+            dxl_addparam_result = groupSyncWrite.addParam(dxl_id[i], param_goal_position[i]);
+
+            if (dxl_addparam_result != true)
+            {
+                RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncWrite addparam failed", dxl_id[i]);
+            }
+
+            // std::cout << param_goal_position[i] << std::endl;
+        }
+
+        // Syncwrite goal position
+        dxl_comm_result = groupSyncWrite.txPacket();
+        if (dxl_comm_result != COMM_SUCCESS)
+            packetHandler->getTxRxResult(dxl_comm_result);
+
+        if (dxl_comm_result != COMM_SUCCESS)
+        {
+            RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "%s", packetHandler->getTxRxResult(dxl_comm_result));
+        }
+        else if (dxl_error != 0)
+        {
+            RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "%s", packetHandler->getRxPacketError(dxl_error));
+        }
+        else
+        {
+            // RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "Set [I: %d]", j);
+        }
+
+        // Clear syncwrite parameter storage
+        groupSyncWrite.clearParam();
+
+        // Read Data
+        dxl_comm_result = groupSyncRead.txRxPacket();
+        if (dxl_comm_result != COMM_SUCCESS)
+            packetHandler->getTxRxResult(dxl_comm_result);
+
+        for (i = 0; i < 7; i++)
+        {
+            // Check if groupsyncread data of Dynamixel is available
+            dxl_getdata_result = groupSyncRead.isAvailable(dxl_id[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
+            if (dxl_getdata_result != true)
+            {
+                RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead getdata failed", dxl_id[i]);
+                return 0;
+            }
+        }
+
+        // for (i = 0; i < 7; i++)
+        // {
+        //     present_current[i][j] = groupSyncRead.getData(dxl_id[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
+        // }
+
+        // RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[I: %d] [Current Joint 0: %.03lf mA]", j, (int16_t)present_current[1][j] * 2.69);
+
+        // usleep(1000);
+        // break;
+    }
+
+    safe_start(20, th);
 
     // std::ofstream myfileC;
     // std::ofstream myfileT;
@@ -363,13 +559,13 @@ int main(int argc, char *argv[])
     // rclcpp::sM_PIn();
     // rclcpp::shutdown();
 
-    // Disable Torque of DYNAMIXEL
-    packetHandler->write1ByteTxRx(
-        portHandler,
-        BROADCAST_ID,
-        ADDR_TORQUE_ENABLE,
-        0,
-        &dxl_error);
+    // // Disable Torque of DYNAMIXEL
+    // packetHandler->write1ByteTxRx(
+    //     portHandler,
+    //     BROADCAST_ID,
+    //     ADDR_TORQUE_ENABLE,
+    //     0,
+    //     &dxl_error);
 
     return 0;
 }
