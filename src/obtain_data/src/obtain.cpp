@@ -101,18 +101,21 @@ int present_position[JN][MAX_DATA];
 int present_current[JN][MAX_DATA];
 
 // Frequency wave
-float Fc_1[] = {0.1166, 0.1263, 0.1451, 0.1602, 0.1654, 0.1689, 0.1748};
-float Fc_2[] = {0.2084, 0.2152, 0.2229, 0.2538, 0.2826, 0.2913, 0.2996};
-float Fc_3[] = {0.3005, 0.3289, 0.3396, 0.3725, 0.4169, 0.5341, 0.5826};
-// float Fc_1[] = {0.0166, 0.0263, 0.0451, 0.0602, 0.0654, 0.0689, 0.0748};
-// float Fc_2[] = {0.1084, 0.1152, 0.1229, 0.1538, 0.1826, 0.1913, 0.1996};
-// float Fc_3[] = {0.2005, 0.2289, 0.2396, 0.2725, 0.3169, 0.4341, 0.4826};
+// float Fc_1[] = {0.1166, 0.1263, 0.1451, 0.1602, 0.1654, 0.1689, 0.1748};
+// float Fc_2[] = {0.2084, 0.2152, 0.2229, 0.2538, 0.2826, 0.2913, 0.2996};
+// float Fc_3[] = {0.3005, 0.3289, 0.3396, 0.3725, 0.4169, 0.5341, 0.5826};
+float Fc_1[] = {0.1166, 0.2263, 0.1451, 0.2602, 0.1654, 0.1689, 0.1748};
+float Fc_2[] = {0.2084, 0.3152, 0.2229, 0.3538, 0.2826, 0.2913, 0.2996};
+float Fc_3[] = {0.3005, 0.4289, 0.3396, 0.5725, 0.4169, 0.5341, 0.5826};
+
 
 // Amplitude
-float A_1[] = {65, 8, 65, 55, 65, 35, 65};
-float A_2[] = {-65, -8, -65, -55, -65, -35, -65};
+// float A_1[] = {65, 8, 65, 55, 65, 35, 65};
+// float A_2[] = {-65, -8, -65, -55, -65, -35, -65};
 // float A_1[] = { 45,  8,  45,  45,  45,  35,  45};
 // float A_2[] = {-45, -8, -45, -45, -45, -35, -45};
+float A_1[] = {65, 8, 65, 55, 65, 35, 65};
+float A_2[] = {-65, -8, -65, -55, -65, -35, -65};
 
 float A_3[JN];
 
@@ -406,27 +409,34 @@ int main(int argc, char *argv[])
         if (dxl_comm_result != COMM_SUCCESS)
             packetHandler->getTxRxResult(dxl_comm_result);
 
-        for (i = 0; i < 7; i++)
-        {
-            // Check if groupsyncread data of Dynamixel is available
-            dxl_getdata_result = groupSyncRead.isAvailable(dxl_id[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
-            if (dxl_getdata_result != true)
-            {
-                RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead getdata failed", dxl_id[i]);
-                return 0;
-            }
-        }
-
         // for (i = 0; i < 7; i++)
         // {
-        //     present_current[i][j] = groupSyncRead.getData(dxl_id[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
+        //     // Check if groupsyncread data of Dynamixel is available
+        //     dxl_getdata_result = groupSyncRead.isAvailable(dxl_id[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
+        //     if (dxl_getdata_result != true)
+        //     {
+        //         RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead getdata failed", dxl_id[i]);
+        //         return 0;
+        //     }
         // }
 
-        // RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[I: %d] [Current Joint 0: %.03lf mA]", j, (int16_t)present_current[1][j] * 2.69);
+        for (i = 0; i < 7; i++)
+        {
+            present_current[i][j] = groupSyncRead.getData(dxl_id[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
+        }
+
+        RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[I: %d] [Current Joint 0: %.03lf mA]", j, (int16_t)present_current[1][j] * 2.69);
+
+        data << (int16_t)present_current[0][j] * 2.69 << "," << (int16_t)present_current[1][j] * 2.69 << "," << (int16_t)present_current[2][j] * 2.69 << "," << (int16_t)present_current[3][j] * 2.69 << "," << (int16_t)present_current[4][j] * 2.69 << "," << (int16_t)present_current[5][j] * 2.69 << "," << (int16_t)present_current[6][j] * 2.69 << "," << (double)map_range((int16_t)present_current[0][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[1][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[2][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[3][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[4][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[5][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[6][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << std::endl;
+
+        // myfileC << (int16_t)present_current[i] * 2.69 << std::endl;
+        // myfileT << (double)map_range((int16_t)present_current[i] * 2.69, -2300, 2300, -4100, 4100) << std::endl;
 
         // usleep(1000);
         // break;
     }
+
+    data.close();
 
     safe_start(20, th);
 
