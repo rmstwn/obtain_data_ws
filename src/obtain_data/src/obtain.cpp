@@ -72,7 +72,7 @@ using namespace std::chrono_literals;
 #define BAUDRATE 3000000           // Default Baudrate of DYNAMIXEL X series
 #define DEVICE_NAME "/dev/ttyUSB0" // [Linux]: "/dev/ttyUSB*", [Windows]: "COM*"
 #define JN 7
-#define MAX_DATA 10000
+#define MAX_DATA 30000
 
 #define ESC_ASCII_VALUE 0x1b
 
@@ -101,13 +101,12 @@ int present_position[JN][MAX_DATA];
 int present_current[JN][MAX_DATA];
 
 // Frequency wave
-// float Fc_1[] = {0.1166, 0.1263, 0.1451, 0.1602, 0.1654, 0.1689, 0.1748};
-// float Fc_2[] = {0.2084, 0.2152, 0.2229, 0.2538, 0.2826, 0.2913, 0.2996};
-// float Fc_3[] = {0.3005, 0.3289, 0.3396, 0.3725, 0.4169, 0.5341, 0.5826};
-float Fc_1[] = {0.1166, 0.2263, 0.1451, 0.2602, 0.1654, 0.1689, 0.1748};
-float Fc_2[] = {0.2084, 0.3152, 0.2229, 0.3538, 0.2826, 0.2913, 0.2996};
-float Fc_3[] = {0.3005, 0.4289, 0.3396, 0.5725, 0.4169, 0.5341, 0.5826};
-
+float Fc_1[] = {0.1166, 0.1263, 0.1451, 0.1602, 0.1654, 0.1689, 0.1748};
+float Fc_2[] = {0.2084, 0.2152, 0.2229, 0.2538, 0.2826, 0.2913, 0.2996};
+float Fc_3[] = {0.3005, 0.3289, 0.3396, 0.3725, 0.4169, 0.5341, 0.5826};
+// float Fc_1[] = {0.1166, 0.2263, 0.1451, 0.2602, 0.1654, 0.1689, 0.1748};
+// float Fc_2[] = {0.2084, 0.3152, 0.2229, 0.3538, 0.2826, 0.2913, 0.2996};
+// float Fc_3[] = {0.3005, 0.4289, 0.3396, 0.5725, 0.4169, 0.5341, 0.5826};
 
 // Amplitude
 // float A_1[] = {65, 8, 65, 55, 65, 35, 65};
@@ -346,9 +345,11 @@ int main(int argc, char *argv[])
     }
 
     safe_start(20, th);
+    auto start = std::chrono::high_resolution_clock::now();
 
     for (j = 0; j < MAX_DATA; j++)
     {
+
         for (i = 0; i < 7; i++)
         {
             if (i == 3)
@@ -409,31 +410,38 @@ int main(int argc, char *argv[])
         if (dxl_comm_result != COMM_SUCCESS)
             packetHandler->getTxRxResult(dxl_comm_result);
 
-        // for (i = 0; i < 7; i++)
-        // {
-        //     // Check if groupsyncread data of Dynamixel is available
-        //     dxl_getdata_result = groupSyncRead.isAvailable(dxl_id[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
-        //     if (dxl_getdata_result != true)
-        //     {
-        //         RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead getdata failed", dxl_id[i]);
-        //         return 0;
-        //     }
-        // }
+        for (i = 0; i < 7; i++)
+        {
+            // Check if groupsyncread data of Dynamixel is available
+            dxl_getdata_result = groupSyncRead.isAvailable(dxl_id[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
+            if (dxl_getdata_result != true)
+            {
+                RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead getdata failed", dxl_id[i]);
+                return 0;
+            }
+        }
 
         for (i = 0; i < 7; i++)
         {
             present_current[i][j] = groupSyncRead.getData(dxl_id[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
         }
 
-        RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[I: %d] [Current Joint 0: %.03lf mA]", j, (int16_t)present_current[1][j] * 2.69);
+        auto end = std::chrono::high_resolution_clock::now();
 
-        data << (int16_t)present_current[0][j] * 2.69 << "," << (int16_t)present_current[1][j] * 2.69 << "," << (int16_t)present_current[2][j] * 2.69 << "," << (int16_t)present_current[3][j] * 2.69 << "," << (int16_t)present_current[4][j] * 2.69 << "," << (int16_t)present_current[5][j] * 2.69 << "," << (int16_t)present_current[6][j] * 2.69 << "," << (double)map_range((int16_t)present_current[0][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[1][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[2][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[3][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[4][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[5][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[6][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << std::endl;
+        double time_taken = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+        time_taken *= 1e-9;
 
+        RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[Time: %.05lf] [I: %d] [Target Pos Joint 0: %d deg] [Current Joint 0: %.03lf mA]", time_taken, j, (int16_t)th[0][j], (int16_t)present_current[1][j] * 2.69);
+
+        //data << time_taken << "," << (int16_t)present_current[0][j] * 2.69 << "," << (int16_t)present_current[1][j] * 2.69 << "," << (int16_t)present_current[2][j] * 2.69 << "," << (int16_t)present_current[3][j] * 2.69 << "," << (int16_t)present_current[4][j] * 2.69 << "," << (int16_t)present_current[5][j] * 2.69 << "," << (int16_t)present_current[6][j] * 2.69 << "," << (double)map_range((int16_t)present_current[0][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[1][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[2][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[3][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[4][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[5][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[6][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << std::endl;
+
+        data << time_taken << "," << (int16_t)th[0][j] << "," << (int16_t)th[1][j] << "," << (int16_t)th[2][j] << "," << (int16_t)th[3][j] << "," << (int16_t)th[4][j] << "," << (int16_t)th[5][j] << "," << (int16_t)th[6][j] << "," << (double)map_range((int16_t)present_current[0][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[1][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[2][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[3][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[4][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[5][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[6][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << std::endl;
+        
         // myfileC << (int16_t)present_current[i] * 2.69 << std::endl;
         // myfileT << (double)map_range((int16_t)present_current[i] * 2.69, -2300, 2300, -4100, 4100) << std::endl;
 
-        // usleep(1000);
-        // break;
+        //usleep(5000);
+        //  break;
     }
 
     data.close();
@@ -543,17 +551,17 @@ int main(int argc, char *argv[])
     // }
 
     // Generate wave
-    // std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    // std::std::chrono::steady_clock::time_point begin = std::std::chrono::steady_clock::now();
 
     // for (;;)
     // {
-    //     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    //     std::std::chrono::steady_clock::time_point end = std::std::chrono::steady_clock::now();
 
     //     // delay for 5 ms
     //     // for(i = 0 ; i < ms ; i++) {
-    //     std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms] " << count++ << std::endl;
+    //     std::cout << std::std::chrono::duration_cast<std::std::chrono::milliseconds>(end - begin).count() << "[ms] " << count++ << std::endl;
 
-    //     // std::cout << std::chrono::duration_cast<std::chrono::milliseconds> (end - begin).count()  << count++ << std::endl;
+    //     // std::cout << std::std::chrono::duration_cast<std::std::chrono::milliseconds> (end - begin).count()  << count++ << std::endl;
 
     //     usleep(10000);
     //     //}
