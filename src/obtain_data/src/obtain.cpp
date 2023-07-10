@@ -79,8 +79,12 @@ using namespace std::chrono_literals;
 dynamixel::PortHandler *portHandler = dynamixel::PortHandler::getPortHandler(DEVICE_NAME);
 dynamixel::PacketHandler *packetHandler = dynamixel::PacketHandler::getPacketHandler(PROTOCOL_VERSION);
 
+// dynamixel::GroupSyncWrite groupSyncWrite(portHandler, packetHandler, ADDR_GOAL_POSITION, LENGTH_GOAL_POSITION);
+// dynamixel::GroupSyncRead groupSyncRead(portHandler, packetHandler, ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
+
 dynamixel::GroupSyncWrite groupSyncWrite(portHandler, packetHandler, ADDR_GOAL_POSITION, LENGTH_GOAL_POSITION);
-dynamixel::GroupSyncRead groupSyncRead(portHandler, packetHandler, ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
+dynamixel::GroupSyncRead groupSyncReadPosition(portHandler, packetHandler, ADDR_PRESENT_POSITION, LENGTH_PRESENT_POSITION);
+dynamixel::GroupSyncRead groupSyncReadCurrent(portHandler, packetHandler, ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
 
 uint8_t dxl_id[7] = {2, 3, 4, 5, 6, 7, 8};
 uint8_t dxl_error = 0;
@@ -336,7 +340,17 @@ int main(int argc, char *argv[])
 
     for (j = 0; j < 7; j++)
     {
-        dxl_addparam_result = groupSyncRead.addParam(dxl_id[j]);
+        dxl_addparam_result = groupSyncReadPosition.addParam(dxl_id[j]);
+        if (dxl_addparam_result != true)
+        {
+            RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead addparam failed", dxl_id[j]);
+            return 0;
+        }
+    }
+
+    for (j = 0; j < 7; j++)
+    {
+        dxl_addparam_result = groupSyncReadCurrent.addParam(dxl_id[j]);
         if (dxl_addparam_result != true)
         {
             RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead addparam failed", dxl_id[j]);
@@ -406,14 +420,14 @@ int main(int argc, char *argv[])
         groupSyncWrite.clearParam();
 
         // Read Data
-        dxl_comm_result = groupSyncRead.txRxPacket();
+        dxl_comm_result = groupSyncReadPosition.txRxPacket();
         if (dxl_comm_result != COMM_SUCCESS)
             packetHandler->getTxRxResult(dxl_comm_result);
 
         for (i = 0; i < 7; i++)
         {
             // Check if groupsyncread data of Dynamixel is available
-            dxl_getdata_result = groupSyncRead.isAvailable(dxl_id[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
+            dxl_getdata_result = groupSyncReadPosition.isAvailable(dxl_id[i], ADDR_PRESENT_POSITION, LENGTH_PRESENT_POSITION);
             if (dxl_getdata_result != true)
             {
                 RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead getdata failed", dxl_id[i]);
@@ -423,7 +437,23 @@ int main(int argc, char *argv[])
 
         for (i = 0; i < 7; i++)
         {
-            present_current[i][j] = groupSyncRead.getData(dxl_id[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
+            present_position[i][j] = groupSyncReadPosition.getData(dxl_id[i], ADDR_PRESENT_POSITION, LENGTH_PRESENT_POSITION);
+        }
+
+        for (i = 0; i < 7; i++)
+        {
+            // Check if groupsyncread data of Dynamixel is available
+            dxl_getdata_result = groupSyncReadCurrent.isAvailable(dxl_id[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
+            if (dxl_getdata_result != true)
+            {
+                RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead getdata failed", dxl_id[i]);
+                return 0;
+            }
+        }
+
+        for (i = 0; i < 7; i++)
+        {
+            present_current[i][j] = groupSyncReadCurrent.getData(dxl_id[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
         }
 
         auto end = std::chrono::high_resolution_clock::now();
@@ -433,15 +463,30 @@ int main(int argc, char *argv[])
 
         RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[Time: %.05lf] [I: %d] [Target Pos Joint 0: %d deg] [Current Joint 0: %.03lf mA]", time_taken, j, (int16_t)th[0][j], (int16_t)present_current[1][j] * 2.69);
 
-        //data << time_taken << "," << (int16_t)present_current[0][j] * 2.69 << "," << (int16_t)present_current[1][j] * 2.69 << "," << (int16_t)present_current[2][j] * 2.69 << "," << (int16_t)present_current[3][j] * 2.69 << "," << (int16_t)present_current[4][j] * 2.69 << "," << (int16_t)present_current[5][j] * 2.69 << "," << (int16_t)present_current[6][j] * 2.69 << "," << (double)map_range((int16_t)present_current[0][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[1][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[2][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[3][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[4][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[5][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[6][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << std::endl;
+        // data << time_taken << "," << (int16_t)present_current[0][j] * 2.69 << "," << (int16_t)present_current[1][j] * 2.69 << "," << (int16_t)present_current[2][j] * 2.69 << "," << (int16_t)present_current[3][j] * 2.69 << "," << (int16_t)present_current[4][j] * 2.69 << "," << (int16_t)present_current[5][j] * 2.69 << "," << (int16_t)present_current[6][j] * 2.69 << "," << (double)map_range((int16_t)present_current[0][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[1][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[2][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[3][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[4][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[5][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[6][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << std::endl;
+        // data << time_taken << "," << (int16_t)th[0][j] << "," << (int16_t)th[1][j] << "," << (int16_t)th[2][j] << "," << (int16_t)th[3][j] << "," << (int16_t)th[4][j] << "," << (int16_t)th[5][j] << "," << (int16_t)th[6][j] << "," << (double)map_range((int16_t)present_current[0][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[1][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[2][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[3][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[4][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[5][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[6][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << std::endl;
 
-        data << time_taken << "," << (int16_t)th[0][j] << "," << (int16_t)th[1][j] << "," << (int16_t)th[2][j] << "," << (int16_t)th[3][j] << "," << (int16_t)th[4][j] << "," << (int16_t)th[5][j] << "," << (int16_t)th[6][j] << "," << (double)map_range((int16_t)present_current[0][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[1][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[2][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[3][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[4][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[5][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << "," << (double)map_range((int16_t)present_current[6][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << std::endl;
-        
+        data << time_taken << ","
+             << (int16_t)present_position[0][j] << ","
+             << (int16_t)present_position[1][j] << ","
+             << (int16_t)present_position[2][j] << ","
+             << (int16_t)present_position[3][j] << ","
+             << (int16_t)present_position[4][j] << ","
+             << (int16_t)present_position[5][j] << ","
+             << (int16_t)present_position[6][j] << ","
+             << (double)map_range((int16_t)present_current[0][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << ","
+             << (double)map_range((int16_t)present_current[1][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << ","
+             << (double)map_range((int16_t)present_current[2][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << ","
+             << (double)map_range((int16_t)present_current[3][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << ","
+             << (double)map_range((int16_t)present_current[4][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << ","
+             << (double)map_range((int16_t)present_current[5][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << ","
+             << (double)map_range((int16_t)present_current[6][j] * 2.69, -2300, 2300, -4100, 4100) * 2.69 << std::endl;
+
         // myfileC << (int16_t)present_current[i] * 2.69 << std::endl;
         // myfileT << (double)map_range((int16_t)present_current[i] * 2.69, -2300, 2300, -4100, 4100) << std::endl;
 
-        //usleep(5000);
-        //  break;
+        // usleep(5000);
+        //   break;
     }
 
     data.close();
