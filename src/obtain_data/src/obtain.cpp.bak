@@ -23,11 +23,12 @@
 
 #include "obtain_data/dynamixel_node.hpp"
 #include "obtain_data/crane_x7_comm.hpp"
-#include "obtain_data/globals.hpp"
-
 #include "crane_x7_comm.cpp"
 
 using namespace std::chrono_literals;
+
+// Setup topic name
+const std::string JOINTSTATE_TOPIC = "/joint_state";
 
 // Frequency wave
 float Fc_1[] = {0.1166, 0.1263, 0.1451, 0.1602, 0.1654, 0.1689, 0.1748};
@@ -37,6 +38,10 @@ float Fc_3[] = {0.3005, 0.3289, 0.3396, 0.3725, 0.4169, 0.5341, 0.5826};
 float A_1[] = {65, 8, 65, 55, 65, 35, 65};
 float A_2[] = {-65, -8, -65, -55, -65, -35, -65};
 float A_3[JOINT_NUM];
+
+double present_theta[JOINT_NUM] = {0};
+double present_angvel[JOINT_NUM] = {0};
+double present_current[JOINT_NUM] = {0};
 
 int i;
 int j;
@@ -51,18 +56,61 @@ double th[JOINT_NUM][MAX_DATA];
 double th_d[JOINT_NUM][MAX_DATA];
 double th_dd[JOINT_NUM][MAX_DATA];
 
+class DynamixelStatePublisher : public rclcpp::Node
+{
+public:
+    DynamixelStatePublisher()
+        : Node("joint_state_publisher"), count_(0)
+    {
+        // Setup pub/sub
+        joint_pub_ = create_publisher<sensor_msgs::msg::JointState>(JOINTSTATE_TOPIC, rclcpp::SystemDefaultsQoS());
+        timer_ = this->create_wall_timer(
+            50ms, std::bind(&DynamixelStatePublisher::timer_callback, this));
+    }
+
+private:
+    void timer_callback()
+    {
+        // Create the messages we might publish
+        auto joint_msg = std::make_unique<sensor_msgs::msg::JointState>();
+
+        joint_msg->name.resize(JOINT_NUM);
+        joint_msg->position.resize(JOINT_NUM);
+        joint_msg->velocity.resize(JOINT_NUM);
+        joint_msg->effort.resize(JOINT_NUM);
+
+        joint_msg->header.frame_id = "CraneX7";
+
+        getCranex7JointState(present_theta, present_angvel, present_current);
+
+        for (int i = 0; i < JOINT_NUM; i++)
+        {
+            joint_msg->name[i] = "cranex7_j" + std::to_string(i);
+            joint_msg->position[i] = present_theta[i];
+            joint_msg->velocity[i] = present_angvel[i];
+            joint_msg->effort[i] = present_current[i];
+
+            // joint_msg->position[i] = 1;
+            // joint_msg->velocity[i] = 1;
+            // joint_msg->effort[i] = 1;
+        }
+
+        joint_msg->header.stamp = now();
+
+        joint_pub_->publish(std::move(joint_msg));
+    }
+
+    rclcpp::TimerBase::SharedPtr timer_;
+    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_pub_;
+    size_t count_;
+};
+
 int main(int argc, char *argv[])
 {
     std::cout << "Press any key to start (or press q to quit)\n";
 
     if (getchar() == ('q'))
         return 0;
-
-    JointState jointState;
-
-    double present_position[JOINT_NUM] = {0};
-    double present_velocity[JOINT_NUM] = {0};
-    double present_current[JOINT_NUM] = {0};
 
     // Parameters Signal
     for (i = 0; i < 7; i++)
@@ -108,22 +156,8 @@ int main(int argc, char *argv[])
 
     safe_start(20);
 
-    while (true)
-    {
-        getCranex7JointState(present_position, present_velocity, present_current);
-        std::cout << present_current[0] << " " << present_current[1] << " " << present_current[2] << " " << present_current[3] << " " << present_current[4] << " " << present_current[5] << " " << present_current[6] << " " << present_current[7] << std::endl;
-
-        for (int i = 0; i < JOINT_NUM; i++)
-        {
-            // jointState.setTheta(i, 3);
-            // jointState.setAngVel(i, present_velocity[i]);
-            // jointState.setCurrent(i, present_current[i]);
-
-            jointState.present_theta[i] = present_position[i];
-            jointState.present_angvel[i] = present_velocity[i];
-            jointState.present_current[i] = present_current[i];
-        }
-    }
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<DynamixelStatePublisher>());
 
     //  sleeps(5);
 
@@ -191,6 +225,8 @@ int main(int argc, char *argv[])
     // setCranex7TorqueState(TORQUE_DISABLE);
 
     // closeCranex7Port();
+
+    rclcpp::shutdown();
 
     return 0;
 }

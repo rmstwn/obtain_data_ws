@@ -11,23 +11,34 @@ find_package(ament_cmake REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
-find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(dynamixel_sdk REQUIRED)
-find_package(dynamixel_sdk_custom_interfaces REQUIRED)
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+  geometry_msgs
+  rclcpp
+  rclcpp_components
+  sensor_msgs
+  std_msgs
+  Eigen3
+  eigen3_cmake_module
+  dynamixel_sdk_custom_interfaces
+  dynamixel_sdk
+)
+
+foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
+  find_package(${Dependency} REQUIRED)
+endforeach()
 
 include_directories(include)
 
 add_executable(obtain src/obtain.cpp)
-ament_target_dependencies(obtain
-  rclcpp 
-  std_msgs
-  dynamixel_sdk_custom_interfaces
-  dynamixel_sdk
-  )
+ament_target_dependencies(obtain PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+add_executable(jointstatepub src/publish.cpp)
+ament_target_dependencies(jointstatepub PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+#rclcpp_components_register_nodes(jointstate "obtain_data::DynamixelStatePublisher")
 
 install(TARGETS
   obtain
+  jointstatepub
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -85,5 +85,6 @@ int getCranex7JointState(double *, double *, double *);
 void brakeCranex7Joint(void);
 void closeCranex7Port(void);
 void safe_start(int *);
+int AddSyncReadParam(void);
 
 #endif

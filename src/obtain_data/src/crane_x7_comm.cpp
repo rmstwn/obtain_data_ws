@@ -393,7 +393,37 @@ int initilizeCranex7(uint8_t *operating_mode_array)
     }
 
     // Add param for joint state read
-    for (int i= 0; i < JOINT_NUM; i++)
+    for (int i = 0; i < JOINT_NUM; i++)
+    {
+        dxl_addparam_result = groupSyncReadPosition.addParam(id_array[i]);
+        if (dxl_addparam_result != true)
+        {
+            RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead addparam failed", id_array[i]);
+            return 0;
+        }
+        dxl_addparam_result = groupSyncReadVelocity.addParam(id_array[i]);
+        if (dxl_addparam_result != true)
+        {
+            RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead addparam failed", id_array[i]);
+            return 0;
+        }
+
+        dxl_addparam_result = groupSyncReadCurrent.addParam(id_array[i]);
+        if (dxl_addparam_result != true)
+        {
+            RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead addparam failed", id_array[i]);
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
+int AddSyncReadParam(void)
+{
+
+    // Add param for joint state read
+    for (int i = 0; i < JOINT_NUM; i++)
     {
         dxl_addparam_result = groupSyncReadPosition.addParam(id_array[i]);
         if (dxl_addparam_result != true)
@@ -615,6 +645,7 @@ int setCranex7Angle(double *angle_array)
     // Clear syncwrite parameter storage
     groupSyncWrite.clearParam();
 
+    return 0;
 }
 
 /**
@@ -651,6 +682,58 @@ int getCranex7JointState(double *angle_array, double *angular_velocity_array, do
     {
         present_position[i] = groupSyncReadPosition.getData(id_array[i], ADDR_PRESENT_POSITION, LENGTH_PRESENT_POSITION);
         angle_array[i] = dxlvalue2rad((double)(present_position[i] - (int32_t)home_angle_array[i]));
+    }
+
+    // Read Velocity Data
+    dxl_comm_result = groupSyncReadVelocity.txRxPacket();
+    if (dxl_comm_result != COMM_SUCCESS)
+        packetHandler->getTxRxResult(dxl_comm_result);
+
+    for (int i = 0; i < JOINT_NUM; i++)
+    {
+        // Check if groupsyncread data of Dynamixel is available
+        dxl_getdata_result = groupSyncReadVelocity.isAvailable(id_array[i], ADDR_PRESENT_VELOCITY, LENGTH_PRESENT_VELOCITY);
+        if (dxl_getdata_result != true)
+        {
+            RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead getdata velocity failed", id_array[i]);
+            return 0;
+        }
+    }
+
+    for (int i = 0; i < JOINT_NUM; i++)
+    {
+        present_velocity[i] = groupSyncReadVelocity.getData(id_array[i], ADDR_PRESENT_VELOCITY, LENGTH_PRESENT_VELOCITY);
+        angular_velocity_array[i] = dxlvalue2angularvel((double)present_velocity[i]);
+    }
+
+    // Read Current Data
+    dxl_comm_result = groupSyncReadCurrent.txRxPacket();
+    if (dxl_comm_result != COMM_SUCCESS)
+        packetHandler->getTxRxResult(dxl_comm_result);
+
+    for (int i = 0; i < JOINT_NUM; i++)
+    {
+        // Check if groupsyncread data of Dynamixel is available
+        dxl_getdata_result = groupSyncReadCurrent.isAvailable(id_array[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
+        if (dxl_getdata_result != true)
+        {
+            RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead getdata current failed", id_array[i]);
+            return 0;
+        }
+    }
+
+    for (int i = 0; i < JOINT_NUM; i++)
+    {
+        present_current[i] = groupSyncReadCurrent.getData(id_array[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
+
+        if (i == XM540_W270_JOINT)
+        {
+            torque_array[i] = current2torqueXM540W270(dxlvalue2current((double)present_current[i]));
+        }
+        else
+        {
+            torque_array[i] = current2torqueXM430W350(dxlvalue2current((double)present_current[i]));
+        }
     }
 }
 
