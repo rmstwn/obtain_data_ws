@@ -63,7 +63,7 @@
 #define PI 3.14159265
 #endif
 
-#define MAX_DATA 30000
+#define MAX_DATA 5000
 
 #define ESC_ASCII_VALUE 0x1b
 
@@ -82,6 +82,9 @@ int setCranex7Angle(double *);
 int setCranex7AngularVelocity(double *);
 int setCranex7Torque(double *);
 int getCranex7JointState(double *, double *, double *);
+int getCranex7Position(double *);
+int getCranex7Velocity(double *);
+int getCranex7Current(double *);
 void brakeCranex7Joint(void);
 void closeCranex7Port(void);
 void safe_start(int *);

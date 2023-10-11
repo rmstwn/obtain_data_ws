@@ -42,8 +42,8 @@ float Fc_1[] = {0.1166, 0.1263, 0.1451, 0.1602, 0.1654, 0.1689, 0.1748};
 float Fc_2[] = {0.2084, 0.2152, 0.2229, 0.2538, 0.2826, 0.2913, 0.2996};
 float Fc_3[] = {0.3005, 0.3289, 0.3396, 0.3725, 0.4169, 0.5341, 0.5826};
 
-float A_1[] = {65, 8, 65, 50, 65, 35, 65};
-float A_2[] = {-65, -8, -65, -50, -65, -35, -65};
+float A_1[] = {65, 8, 65, 55, 65, 35, 65};
+float A_2[] = {-65, -8, -65, -55, -65, -35, -65};
 float A_3[JOINT_NUM];
 
 int i;
@@ -66,32 +66,70 @@ class DynamixelStatePublisher : public rclcpp::Node
 
 public:
     DynamixelStatePublisher()
-        : Node("joint_state_publisher")
+        : Node("joint_state_publisher"), count_(0)
     {
         // Setup pub/sub
         joint_pub_ = create_publisher<sensor_msgs::msg::JointState>(JOINTSTATE_TOPIC, rclcpp::SystemDefaultsQoS());
         timer_ = this->create_wall_timer(
-            1ms, std::bind(&DynamixelStatePublisher::timer_callback, this));
+            50ms, std::bind(&DynamixelStatePublisher::timer_callback, this));
+        main_timer_ = this->create_wall_timer(
+            50ms, std::bind(&DynamixelStatePublisher::run_main_timer, this));
     }
 
 private:
     rclcpp::TimerBase::SharedPtr timer_;
+    rclcpp::TimerBase::SharedPtr main_timer_;
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_pub_;
+    size_t count_;
 
     // JointState jointState;
 
-    int Waveflag = 0;
+    int flag = 1;
     int Readflag = 0;
-    int Initflag = 0;
 
-    double present_theta[JOINT_NUM] = {0};
-    double present_angvel[JOINT_NUM] = {0};
-    double present_current[JOINT_NUM] = {0};
+    double present_theta[JOINT_NUM] = {1};
+    double present_angvel[JOINT_NUM] = {1};
+    double present_current[JOINT_NUM] = {10};
 
     void timer_callback()
     {
+        // Create the messages we might publish
+        auto joint_msg = std::make_unique<sensor_msgs::msg::JointState>();
 
-        if (Waveflag == 0)
+        joint_msg->name.resize(JOINT_NUM);
+        joint_msg->position.resize(JOINT_NUM);
+        joint_msg->velocity.resize(JOINT_NUM);
+        joint_msg->effort.resize(JOINT_NUM);
+
+        joint_msg->header.frame_id = "CraneX7";
+
+        // if (Readflag == 1)
+        // {
+        //getCranex7JointState(present_theta, present_angvel, present_current);
+        // }
+
+        for (int i = 0; i < JOINT_NUM; i++)
+        {
+            joint_msg->name[i] = "cranex7_j" + std::to_string(i);
+            // joint_msg->position[i] = jointState.getTheta(i);
+            // joint_msg->velocity[i] = jointState.getAngVel(i);
+            // joint_msg->effort[i] = jointState.getCurrent(i);
+
+            joint_msg->position[i] = DynamixelStatePublisher::present_theta[i];
+            joint_msg->velocity[i] = DynamixelStatePublisher::present_angvel[i];
+            joint_msg->effort[i] = DynamixelStatePublisher::present_current[i];
+
+            DynamixelStatePublisher::present_current[i] = i;
+            std::cout << "Timer callback " << DynamixelStatePublisher::present_theta[0] << " " << DynamixelStatePublisher::present_theta[1] << " " << present_theta[2] << " " << present_theta[3] << " " << present_theta[4] << " " << present_theta[5] << " " << present_theta[6] << " " << present_theta[7] << std::endl;
+        }
+
+        joint_msg->header.stamp = now();
+        joint_pub_->publish(std::move(joint_msg));
+    }
+
+    int run_main_timer()
+    {
+        if (flag == 1)
         {
             // Parameters Signal
             for (i = 0; i < 7; i++)
@@ -99,6 +137,10 @@ private:
                 A_3[i] = (-A_1[i] * Fc_1[i] - A_2[i] * Fc_2[i]) / Fc_3[i];
                 // std::cout << A_3[i] << syd::endl;
             }
+            rclcpp::TimerBase::SharedPtr timer_;
+            rclcpp::TimerBase::SharedPtr main_timer_;
+            rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_pub_;
+            size_t count_;
 
             t[0] = 0;
             for (i = 1; i <= MAX_DATA; i++)
@@ -126,18 +168,29 @@ private:
                 }
             }
 
-            Waveflag = 1;
-        }
+            std::cout << "Press any key to start (or press q to quit)\n";
 
-        if (Initflag == 0)
-        {
+            if (getchar() == ('q'))
+            {
+                flag = 0;
+                return 0;
+            }
+
             uint8_t operating_mode[JOINT_NUM] = {OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION};
 
-            initilizeCranex7(operating_mode);
-            setCranex7TorqueState(TORQUE_ENABLE);
+            if (initilizeCranex7(operating_mode))
+            {
+                return 1;
+            }
+
+            Readflag = 1;
+
+            // setCranex7TorqueState(TORQUE_ENABLE);
+            // sleeps(5);
 
             safe_start(20);
 
+            // sleeps(5);
             for (j = 0; j < MAX_DATA; j++)
             {
                 for (i = 0; i < 7; i++)
@@ -145,63 +198,35 @@ private:
                     th_run[i] = th[i][j];
                 }
 
-                // usleep(50000);
-                setCranex7Angle(th_run);
-                // getCranex7JointState(present_theta, present_angvel, present_current);
-                getCranex7Current(present_current);
+                // std::cout << j << " " << th_run[0] << " " << th_run[1] << " " << th_run[2] << " " << th_run[3] << " " << th_run[4] << " " << th_run[5] << " " << th_run[6] << " " << th_run[7] << std::endl;
 
-                // std::cout << j << " " << present_theta[0] << " " << present_theta[1] << " " << present_theta[2] << " " << present_theta[3] << " " << present_theta[4] << " " << present_theta[5] << " " << present_theta[6] << " " << present_theta[7] << std::endl;
-                std::cout << j << " " << present_current[0] << " " << present_current[1] << " " << present_current[2] << " " << present_current[3] << " " << present_current[4] << " " << present_current[5] << " " << present_current[6] << " " << present_current[7] << std::endl;
+                // std::cout << j << " " << Readflag << std::endl;
 
-                // Create the messages we might publish
-                auto joint_msg = std::make_unique<sensor_msgs::msg::JointState>();
+                usleep(50000);
+                // setCranex7Angle(th_run);
+                getCranex7JointState(DynamixelStatePublisher::present_theta, DynamixelStatePublisher::present_angvel, DynamixelStatePublisher::present_current);
 
-                joint_msg->name.resize(JOINT_NUM);
-                joint_msg->position.resize(JOINT_NUM);
-                joint_msg->velocity.resize(JOINT_NUM);
-                joint_msg->effort.resize(JOINT_NUM);
-
-                joint_msg->header.frame_id = "CraneX7";
-
-                for (int i = 0; i < JOINT_NUM; i++)
-                {
-                    joint_msg->name[i] = "cranex7_j" + std::to_string(i);
-
-                    joint_msg->position[i] = present_theta[i];
-                    joint_msg->velocity[i] = present_angvel[i];
-                    joint_msg->effort[i] = present_current[i];
-                }
-
-                joint_msg->header.stamp = now();
-                joint_pub_->publish(std::move(joint_msg));
+                std::cout << j << " " << DynamixelStatePublisher::present_theta[0] << " " << DynamixelStatePublisher::present_theta[1] << " " << present_theta[2] << " " << present_theta[3] << " " << present_theta[4] << " " << present_theta[5] << " " << present_theta[6] << " " << present_theta[7] << std::endl;
             }
 
-            safe_start(20);
+            // double th_a1[] = {10, 0, 0, 0, 0, 0, 0, 0};
+            // double th_a2[] = {-45, 0, 0, 0, 0, 0, 0, 0};
 
-            Initflag = 1;
+            // setCranex7Angle(th_a1);
+            // setCranex7Angle(th_a2);
+
+            flag = 0;
         }
     }
 };
 
 int main(int argc, char *argv[])
 {
-    // rclcpp::init(argc, argv);
-
-    // // Create a multi-threaded executor
-    // rclcpp::executors::MultiThreadedExecutor executor;
-
-    // auto node = std::make_shared<DynamixelStatePublisher>();
-    // executor.add_node(node);
-
-    // // Spin the node with the executor
-    // executor.spin();
-
-    // rclcpp::shutdown();
-
     rclcpp::init(argc, argv);
     rclcpp::spin(std::make_shared<DynamixelStatePublisher>());
     rclcpp::shutdown();
     return 0;
-
-    return 0;
 }
+
+// #include <rclcpp_components/register_node_macro.hpp>
+// RCLCPP_COMPONENTS_REGISTER_NODE(obtain_data::DynamixelStatePublisher)

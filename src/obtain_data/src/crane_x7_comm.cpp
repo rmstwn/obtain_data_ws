@@ -519,10 +519,10 @@ void safe_start(int velocity)
         if (i == 3)
         {
             // Allocate goal position value into byte array
-            param_goal_position[i][0] = DXL_LOBYTE(DXL_LOWORD((int)map_range(0, -180, 180, 768, 2048)));
-            param_goal_position[i][1] = DXL_HIBYTE(DXL_LOWORD((int)map_range(0, -180, 180, 768, 2048)));
-            param_goal_position[i][2] = DXL_LOBYTE(DXL_HIWORD((int)map_range(0, -180, 180, 768, 2048)));
-            param_goal_position[i][3] = DXL_HIBYTE(DXL_HIWORD((int)map_range(0, -180, 180, 768, 2048)));
+            param_goal_position[i][0] = DXL_LOBYTE(DXL_LOWORD((int)map_range(0, -57.5, 57.5, 768, 2048)));
+            param_goal_position[i][1] = DXL_HIBYTE(DXL_LOWORD((int)map_range(0, -57.5, 57.5, 768, 2048)));
+            param_goal_position[i][2] = DXL_LOBYTE(DXL_HIWORD((int)map_range(0, -57.5, 57.5, 768, 2048)));
+            param_goal_position[i][3] = DXL_HIBYTE(DXL_HIWORD((int)map_range(0, -57.5, 57.5, 768, 2048)));
         }
         else
         {
@@ -595,10 +595,10 @@ int setCranex7Angle(double *angle_array)
         if (i == 3)
         {
             // Allocate goal position value into byte array
-            param_goal_position[i][0] = DXL_LOBYTE(DXL_LOWORD((int)map_range(angle_array[i], -180, 180, 768, 2048)));
-            param_goal_position[i][1] = DXL_HIBYTE(DXL_LOWORD((int)map_range(angle_array[i], -180, 180, 768, 2048)));
-            param_goal_position[i][2] = DXL_LOBYTE(DXL_HIWORD((int)map_range(angle_array[i], -180, 180, 768, 2048)));
-            param_goal_position[i][3] = DXL_HIBYTE(DXL_HIWORD((int)map_range(angle_array[i], -180, 180, 768, 2048)));
+            param_goal_position[i][0] = DXL_LOBYTE(DXL_LOWORD((int)map_range(angle_array[i], -57.5, 57.5, 768, 2048)));
+            param_goal_position[i][1] = DXL_HIBYTE(DXL_LOWORD((int)map_range(angle_array[i], -57.5, 57.5, 768, 2048)));
+            param_goal_position[i][2] = DXL_LOBYTE(DXL_HIWORD((int)map_range(angle_array[i], -57.5, 57.5, 768, 2048)));
+            param_goal_position[i][3] = DXL_HIBYTE(DXL_HIWORD((int)map_range(angle_array[i], -57.5, 57.5, 768, 2048)));
         }
         else
         {
@@ -639,7 +639,7 @@ int setCranex7Angle(double *angle_array)
     }
     else
     {
-        RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "Set Goal Pos");
+        // RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "Set Goal Pos");
     }
 
     // Clear syncwrite parameter storage
@@ -705,6 +705,113 @@ int getCranex7JointState(double *angle_array, double *angular_velocity_array, do
         present_velocity[i] = groupSyncReadVelocity.getData(id_array[i], ADDR_PRESENT_VELOCITY, LENGTH_PRESENT_VELOCITY);
         angular_velocity_array[i] = dxlvalue2angularvel((double)present_velocity[i]);
     }
+
+    // Read Current Data
+    dxl_comm_result = groupSyncReadCurrent.txRxPacket();
+    if (dxl_comm_result != COMM_SUCCESS)
+        packetHandler->getTxRxResult(dxl_comm_result);
+
+    for (int i = 0; i < JOINT_NUM; i++)
+    {
+        // Check if groupsyncread data of Dynamixel is available
+        dxl_getdata_result = groupSyncReadCurrent.isAvailable(id_array[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
+        if (dxl_getdata_result != true)
+        {
+            RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead getdata current failed", id_array[i]);
+            return 0;
+        }
+    }
+
+    for (int i = 0; i < JOINT_NUM; i++)
+    {
+        present_current[i] = groupSyncReadCurrent.getData(id_array[i], ADDR_PRESENT_CURRENT, LENGTH_PRESENT_CURRENT);
+
+        if (i == XM540_W270_JOINT)
+        {
+            torque_array[i] = current2torqueXM540W270(dxlvalue2current((double)present_current[i]));
+        }
+        else
+        {
+            torque_array[i] = current2torqueXM430W350(dxlvalue2current((double)present_current[i]));
+        }
+    }
+}
+
+/**
+ * @fn int getCranex7Position(double *)
+ * @brief Function to get joint current
+ * @param[out] angle_array[] present angle array
+ * @return Success or failure.
+ */
+int getCranex7Position(double *angle_array)
+{
+    int32_t present_position[JOINT_NUM] = {0};
+
+    // Read Position Data
+    dxl_comm_result = groupSyncReadPosition.txRxPacket();
+    if (dxl_comm_result != COMM_SUCCESS)
+        packetHandler->getTxRxResult(dxl_comm_result);
+
+    for (int i = 0; i < JOINT_NUM; i++)
+    {
+        // Check if groupsyncread data of Dynamixel is available
+        dxl_getdata_result = groupSyncReadPosition.isAvailable(id_array[i], ADDR_PRESENT_POSITION, LENGTH_PRESENT_POSITION);
+        if (dxl_getdata_result != true)
+        {
+            RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead getdata position failed", id_array[i]);
+            return 0;
+        }
+    }
+
+    for (int i = 0; i < JOINT_NUM; i++)
+    {
+        present_position[i] = groupSyncReadPosition.getData(id_array[i], ADDR_PRESENT_POSITION, LENGTH_PRESENT_POSITION);
+        angle_array[i] = dxlvalue2rad((double)(present_position[i] - (int32_t)home_angle_array[i]));
+    }
+}
+
+/**
+ * @fn int getCranex7Velocity(double *)
+ * @brief Function to get joint current
+ * @param[out] angular_velocity_array[] present angular velocity array
+ * @return Success or failure.
+ */
+int getCranex7Velocity(double *angular_velocity_array)
+{
+    int16_t present_velocity[JOINT_NUM] = {0};
+
+    // Read Velocity Data
+    dxl_comm_result = groupSyncReadVelocity.txRxPacket();
+    if (dxl_comm_result != COMM_SUCCESS)
+        packetHandler->getTxRxResult(dxl_comm_result);
+
+    for (int i = 0; i < JOINT_NUM; i++)
+    {
+        // Check if groupsyncread data of Dynamixel is available
+        dxl_getdata_result = groupSyncReadVelocity.isAvailable(id_array[i], ADDR_PRESENT_VELOCITY, LENGTH_PRESENT_VELOCITY);
+        if (dxl_getdata_result != true)
+        {
+            RCLCPP_INFO(rclcpp::get_logger("obtain_data_node"), "[ID:%03d] groupSyncRead getdata velocity failed", id_array[i]);
+            return 0;
+        }
+    }
+
+    for (int i = 0; i < JOINT_NUM; i++)
+    {
+        present_velocity[i] = groupSyncReadVelocity.getData(id_array[i], ADDR_PRESENT_VELOCITY, LENGTH_PRESENT_VELOCITY);
+        angular_velocity_array[i] = dxlvalue2angularvel((double)present_velocity[i]);
+    }
+}
+
+/**
+ * @fn int getCranex7Current(double *)
+ * @brief Function to get joint current
+ * @param[out] torque_array[] present torque array
+ * @return Success or failure.
+ */
+int getCranex7Current(double *torque_array)
+{
+    int16_t present_current[JOINT_NUM] = {0};
 
     // Read Current Data
     dxl_comm_result = groupSyncReadCurrent.txRxPacket();

@@ -4,10 +4,6 @@
 #include <stdio.h>
 #include "obtain_data/crane_x7_comm.hpp"
 
-extern double present_theta2[JOINT_NUM];
-extern double present_angvel2[JOINT_NUM];
-extern double present_current2[JOINT_NUM];
-
 class JointState
 {
 public:

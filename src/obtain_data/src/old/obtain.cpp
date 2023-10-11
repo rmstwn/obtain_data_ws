@@ -23,7 +23,7 @@
 
 #include "obtain_data/dynamixel_node.hpp"
 #include "obtain_data/crane_x7_comm.hpp"
-// #include "obtain_data/globals.hpp"
+//#include "obtain_data/globals.hpp"
 #include "crane_x7_comm.cpp"
 
 using namespace std::chrono_literals;
@@ -50,14 +50,14 @@ double th[JOINT_NUM][MAX_DATA];
 double th_d[JOINT_NUM][MAX_DATA];
 double th_dd[JOINT_NUM][MAX_DATA];
 
-double th_run[JOINT_NUM];
-
 int main(int argc, char *argv[])
 {
     std::cout << "Press any key to start (or press q to quit)\n";
 
     if (getchar() == ('q'))
         return 0;
+
+    JointState jointState;
 
     double present_position[JOINT_NUM] = {0};
     double present_velocity[JOINT_NUM] = {0};
@@ -104,27 +104,6 @@ int main(int argc, char *argv[])
     }
     setCranex7TorqueState(TORQUE_ENABLE);
     // sleeps(5);
-
-    safe_start(20);
-
-    for (j = 0; j < MAX_DATA; j++)
-    {
-        for (i = 0; i < 7; i++)
-        {
-            th_run[i] = th[i][j];
-        }
-
-        // std::cout << j << " " << th_run[0] << " " << th_run[1] << " " << th_run[2] << " " << th_run[3] << " " << th_run[4] << " " << th_run[5] << " " << th_run[6] << " " << th_run[7] << std::endl;
-
-        // std::cout << j << " " << Readflag << std::endl;
-
-        //usleep(50000);
-        setCranex7Angle(th_run);
-        //getCranex7JointState(present_position, present_velocity, present_current);
-        getCranex7Current(present_current);
-
-        std::cout << j << " " << present_current[0] << " " << present_current[1] << " " << present_current[2] << " " << present_current[3] << " " << present_current[4] << " " << present_current[5] << " " << present_current[6] << " " << present_current[7] << std::endl;
-    }
 
     safe_start(20);
 

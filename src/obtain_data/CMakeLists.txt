@@ -32,13 +32,13 @@ include_directories(include)
 add_executable(obtain src/obtain.cpp)
 ament_target_dependencies(obtain PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
-add_executable(jointstatepub src/publish.cpp)
-ament_target_dependencies(jointstatepub PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+add_executable(publish src/publish.cpp)
+ament_target_dependencies(publish PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 #rclcpp_components_register_nodes(jointstate "obtain_data::DynamixelStatePublisher")
 
 install(TARGETS
   obtain
-  jointstatepub
+  publish
   DESTINATION lib/${PROJECT_NAME}
 )
 
