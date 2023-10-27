@@ -7,6 +7,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <array>
 
 #include <sensor_msgs/msg/joint_state.hpp>
 
@@ -26,15 +27,15 @@
 // #include "obtain_data/globals.hpp"
 #include "crane_x7_comm.cpp"
 
-using namespace std::chrono_literals;
+using namespace std;
 
 // Frequency wave
 float Fc_1[] = {0.1166, 0.1263, 0.1451, 0.1602, 0.1654, 0.1689, 0.1748};
 float Fc_2[] = {0.2084, 0.2152, 0.2229, 0.2538, 0.2826, 0.2913, 0.2996};
 float Fc_3[] = {0.3005, 0.3289, 0.3396, 0.3725, 0.4169, 0.5341, 0.5826};
 
-float A_1[] = {65, 8, 65, 55, 65, 35, 65};
-float A_2[] = {-65, -8, -65, -55, -65, -35, -65};
+float A_1[] = {55, 8, 55, 25, 55, 35, 55};
+float A_2[] = {-55, -8, -55, -25, -55, -35, -55};
 float A_3[JOINT_NUM];
 
 int i;
@@ -52,6 +53,12 @@ double th_dd[JOINT_NUM][MAX_DATA];
 
 double th_run[JOINT_NUM];
 
+// array<array<double, JOINT_NUM>, MAX_DATA> th;
+// array<array<double, JOINT_NUM>, MAX_DATA> th_d;
+// array<array<double, JOINT_NUM>, MAX_DATA> th_dd;
+
+// double th_run[JOINT_NUM];
+
 int main(int argc, char *argv[])
 {
     std::cout << "Press any key to start (or press q to quit)\n";
@@ -59,9 +66,14 @@ int main(int argc, char *argv[])
     if (getchar() == ('q'))
         return 0;
 
+    // Feedback variables
     double present_position[JOINT_NUM] = {0};
     double present_velocity[JOINT_NUM] = {0};
     double present_current[JOINT_NUM] = {0};
+
+    // Create log file
+    std::ofstream data;
+    data.open("data.csv");
 
     // Parameters Signal
     for (i = 0; i < 7; i++)
@@ -96,6 +108,14 @@ int main(int argc, char *argv[])
         }
     }
 
+    // for (i = 1; i <= MAX_DATA; i++)
+    // {
+    //     th[7][i] = 0;
+    //     th_d[7][i] = 0;
+    //     th_d[7][i] = 0;
+    //     // std::cout << th[j][i] << std::endl;
+    // }
+
     uint8_t operating_mode[JOINT_NUM] = {OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION};
 
     if (initilizeCranex7(operating_mode))
@@ -107,26 +127,59 @@ int main(int argc, char *argv[])
 
     safe_start(20);
 
+    // array<double, JOINT_NUM> th_run;
+
+    auto start = std::chrono::high_resolution_clock::now();
+
     for (j = 0; j < MAX_DATA; j++)
     {
         for (i = 0; i < 7; i++)
         {
             th_run[i] = th[i][j];
         }
+        // memcpy(th_run, th[j], sizeof(th_run));
+
+        // array<double, JOINT_NUM> th_run = th[j];
 
         // std::cout << j << " " << th_run[0] << " " << th_run[1] << " " << th_run[2] << " " << th_run[3] << " " << th_run[4] << " " << th_run[5] << " " << th_run[6] << " " << th_run[7] << std::endl;
+        // std::cout << j << " " << th_run[3] << std::endl;
 
-        // std::cout << j << " " << Readflag << std::endl;
-
-        //usleep(50000);
+        // usleep(50000);
         setCranex7Angle(th_run);
-        //getCranex7JointState(present_position, present_velocity, present_current);
+        // getCranex7JointState(present_position, present_velocity, present_current);
         getCranex7Current(present_current);
 
+        auto end = std::chrono::high_resolution_clock::now();
+
+        double time_taken = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+        time_taken *= 1e-9;
+
+        data << time_taken << ","
+             << th[0][j] * (M_PI / 180) << ","
+             << th[1][j] * (M_PI / 180) << ","
+             << th[2][j] * (M_PI / 180) << ","
+             << th[3][j] * (M_PI / 180) << ","
+             << th[4][j] * (M_PI / 180) << ","
+             << th[5][j] * (M_PI / 180) << ","
+             << th[6][j] * (M_PI / 180) << ","
+             << (double)present_current[0] << ","
+             << (double)present_current[1] << ","
+             << (double)present_current[2] << ","
+             << (double)present_current[3] << ","
+             << (double)present_current[4] << ","
+             << (double)present_current[5] << ","
+             << (double)present_current[6] << std::endl;
+
         std::cout << j << " " << present_current[0] << " " << present_current[1] << " " << present_current[2] << " " << present_current[3] << " " << present_current[4] << " " << present_current[5] << " " << present_current[6] << " " << present_current[7] << std::endl;
+        //  std::cout << j << " " << present_current[0] << " " << present_current[1] << " " << present_current[2] << " " << present_current[3] << " " << present_current[4] << " " << present_current[5] << " " << present_current[6] << " " << present_current[7] << std::endl;
+
+        usleep(1000);
     }
 
+    data.close();
+
     safe_start(20);
+    setCranex7TorqueState(TORQUE_DISABLE);
 
     return 0;
 }

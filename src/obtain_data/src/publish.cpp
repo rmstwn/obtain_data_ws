@@ -42,8 +42,8 @@ float Fc_1[] = {0.1166, 0.1263, 0.1451, 0.1602, 0.1654, 0.1689, 0.1748};
 float Fc_2[] = {0.2084, 0.2152, 0.2229, 0.2538, 0.2826, 0.2913, 0.2996};
 float Fc_3[] = {0.3005, 0.3289, 0.3396, 0.3725, 0.4169, 0.5341, 0.5826};
 
-float A_1[] = {65, 8, 65, 50, 65, 35, 65};
-float A_2[] = {-65, -8, -65, -50, -65, -35, -65};
+float A_1[] = {55, 8, 55, 25, 55, 35, 55};
+float A_2[] = {-55, -8, -55, -25, -55, -35, -55};
 float A_3[JOINT_NUM];
 
 int i;
@@ -151,7 +151,7 @@ private:
                 getCranex7Current(present_current);
 
                 // std::cout << j << " " << present_theta[0] << " " << present_theta[1] << " " << present_theta[2] << " " << present_theta[3] << " " << present_theta[4] << " " << present_theta[5] << " " << present_theta[6] << " " << present_theta[7] << std::endl;
-                std::cout << j << " " << present_current[0] << " " << present_current[1] << " " << present_current[2] << " " << present_current[3] << " " << present_current[4] << " " << present_current[5] << " " << present_current[6] << " " << present_current[7] << std::endl;
+                //std::cout << j << " " << present_current[0] << " " << present_current[1] << " " << present_current[2] << " " << present_current[3] << " " << present_current[4] << " " << present_current[5] << " " << present_current[6] << " " << present_current[7] << std::endl;
 
                 // Create the messages we might publish
                 auto joint_msg = std::make_unique<sensor_msgs::msg::JointState>();
@@ -167,13 +167,15 @@ private:
                 {
                     joint_msg->name[i] = "cranex7_j" + std::to_string(i);
 
-                    joint_msg->position[i] = present_theta[i];
-                    joint_msg->velocity[i] = present_angvel[i];
+                    //joint_msg->position[i] = present_theta[i];
+                    //joint_msg->velocity[i] = present_angvel[i];
                     joint_msg->effort[i] = present_current[i];
                 }
 
                 joint_msg->header.stamp = now();
                 joint_pub_->publish(std::move(joint_msg));
+
+                usleep(1000);
             }
 
             safe_start(20);
