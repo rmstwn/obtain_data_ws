@@ -1,39 +1,50 @@
+#include <vector>
 #include <iostream>
 #include <cmath>
-#include <vector>
+#include <eigen3/Eigen/Dense>
+#include <eigen3/Eigen/QR>
 
 int main()
 {
-    int len = 10; // Replace with your desired length
+    // int len = 10; // Replace with your desired length
 
     // Define th0 to th7 and omg0 to omg7 as double
-    double th0;
-    double th1;
-    double th2;
-    double th3;
-    double th4;
-    double th5;
-    double th6;
-    double th7;
+    double th0 = 0.4537;
+    double th1 = 0.0681;
+    double th2 = 0.1722;
+    double th3 = -0.4079;
+    double th4 = -0.0130;
+    double th5 = 0.4341;
+    double th6 = 1.6687;
+    // double th7 = 0;
 
-    double omg0 = -1.3;
-    double omg1;
-    double omg2;
-    double omg3;
-    double omg4;
-    double omg5;
-    double omg6;
-    double omg7;
+    double omg0 = 0.2755;
+    double omg1 = 0.0883;
+    double omg2 = 0.5520;
+    double omg3 = -0.3350;
+    double omg4 = 2.7995;
+    double omg5 = 1.0280;
+    double omg6 = 1.9500;
+    // double omg7 = 0;
 
-    // Assuming you have populated th0 to th7 and omg0 to omg7 variables
-    std::vector<double> mot0(26, 0.0);
-    std::vector<double> mot1(26, 0.0);
-    std::vector<double> mot2(26, 0.0);
-    std::vector<double> mot3(26, 0.0);
-    std::vector<double> mot4(26, 0.0);
-    std::vector<double> mot5(26, 0.0);
-    std::vector<double> mot6(26, 0.0);
-    std::vector<double> mot7(26, 0.0);
+    double trq0 = 0;
+    double trq1 = 1.2636;
+    double trq2 = -0.0187;
+    double trq3 = 0.8979;
+    double trq4 = 0.0499;
+    double trq5 = 0.5799;
+    double trq6 = 0.0249;
+    // double trq7 = 0;
+
+    // Assuming you have populated th0 to th6 and omg0 to omg6 variables
+    std::vector<double> mot0(25, 0.0);
+    std::vector<double> mot1(25, 0.0);
+    std::vector<double> mot2(25, 0.0);
+    std::vector<double> mot3(25, 0.0);
+    std::vector<double> mot4(25, 0.0);
+    std::vector<double> mot5(25, 0.0);
+    std::vector<double> mot6(25, 0.0);
+    // std::vector<double> mot7(26, 0.0);
 
     // Assign values to mot0
     mot0[0] = std::copysign(1.0, omg0);                              // 0st axis friction term 1
@@ -50,10 +61,10 @@ int main()
     mot1[2] = std::copysign(1.0, omg1);                                                                                                                                                                                                                                                                        // 1st axis friction term 3 Vel 2
     mot1[3] = std::copysign(1.0, omg1) * std::sqrt(std::fabs(omg1));                                                                                                                                                                                                                                           // 1st axis friction term 4 Vel 2                                                                                                                                                                                                                                  // 1st axis friction term 4 Vel 2
     mot1[15] = 1.0;                                                                                                                                                                                                                                                                                            // Positive constant 2
-    mot1[22] = -std::sin(th1);                                                                                                                                                                                                                                                                                 // Param Mot 1
-    mot1[23] = std::cos(th1) * std::cos(th2) * std::cos(th3) - std::sin(th1) * std::sin(th3);                                                                                                                                                                                                                  // Param Mot 2
-    mot1[24] = -std::cos(th3) * std::sin(th1) - std::cos(th1) * std::cos(th2) * std::sin(th3);                                                                                                                                                                                                                 // Param Mot 3
-    mot1[25] = -std::cos(th3) * std::cos(th5) * std::sin(th1) - std::cos(th2) * std::cos(th5) * std::sin(th3) + std::cos(th1) * std::sin(th2) * std::sin(th4) * std::sin(th5) + std::cos(th4) * std::sin(th1) * std::sin(th3) * std::sin(th5) - std::cos(th2) * std::cos(th3) * std::cos(th4) * std::sin(th5); // Param Mot 4
+    mot1[21] = -std::sin(th1);                                                                                                                                                                                                                                                                                 // Param Mot 1
+    mot1[22] = std::cos(th1) * std::cos(th2) * std::cos(th3) - std::sin(th1) * std::sin(th3);                                                                                                                                                                                                                  // Param Mot 2
+    mot1[23] = -std::cos(th3) * std::sin(th1) - std::cos(th1) * std::cos(th2) * std::sin(th3);                                                                                                                                                                                                                 // Param Mot 3
+    mot1[24] = -std::cos(th3) * std::cos(th5) * std::sin(th1) - std::cos(th2) * std::cos(th5) * std::sin(th3) + std::cos(th1) * std::sin(th2) * std::sin(th4) * std::sin(th5) + std::cos(th4) * std::sin(th1) * std::sin(th3) * std::sin(th5) - std::cos(th2) * std::cos(th3) * std::cos(th4) * std::sin(th5); // Param Mot 4
 
     // Print the values of mot1 for verification
     for (int i = 0; i < mot1.size(); ++i)
@@ -76,12 +87,12 @@ int main()
     }
 
     // Assign values to mot3
-    mot3[4] = std::copysign(1.0, omg3);                                                                                                                                                                                                                                        // 1st axis friction term 7 Vel 4
-    mot3[5] = std::copysign(1.0, omg3) * std::sqrt(std::fabs(omg3));                                                                                                                                                                                                           // 3rd axis friction term 8 Vel 4
+    mot3[6] = std::copysign(1.0, omg3);                                                                                                                                                                                                                                        // 1st axis friction term 7 Vel 4
+    mot3[7] = std::copysign(1.0, omg3) * std::sqrt(std::fabs(omg3));                                                                                                                                                                                                           // 3rd axis friction term 8 Vel 4
     mot3[17] = 1.0;                                                                                                                                                                                                                                                            // Positive constant 4 (1.0 for the 4th constant)
-    mot3[23] = std::cos(th1) * std::cos(th3) - std::cos(th2) * std::sin(th1) * std::sin(th3);                                                                                                                                                                                  // Param Mot 2
-    mot3[24] = -std::cos(th1) * std::sin(th3) - std::cos(th2) * std::cos(th3) * std::sin(th1);                                                                                                                                                                                 // Param Mot 3
-    mot3[25] = -std::cos(th1) * std::cos(th5) * std::sin(th3) - std::cos(th2) * std::cos(th3) * std::cos(th5) * std::sin(th1) - std::cos(th1) * std::cos(th3) * std::cos(th4) * std::sin(th5) + std::cos(th2) * std::cos(th4) * std::sin(th1) * std::sin(th3) * std::sin(th5); // Param Mot 4
+    mot3[22] = std::cos(th1) * std::cos(th3) - std::cos(th2) * std::sin(th1) * std::sin(th3);                                                                                                                                                                                  // Param Mot 2
+    mot3[23] = -std::cos(th1) * std::sin(th3) - std::cos(th2) * std::cos(th3) * std::sin(th1);                                                                                                                                                                                 // Param Mot 3
+    mot3[24] = -std::cos(th1) * std::cos(th5) * std::sin(th3) - std::cos(th2) * std::cos(th3) * std::cos(th5) * std::sin(th1) - std::cos(th1) * std::cos(th3) * std::cos(th4) * std::sin(th5) + std::cos(th2) * std::cos(th4) * std::sin(th1) * std::sin(th3) * std::sin(th5); // Param Mot 4
 
     // Print the values of mot3 for verification
     for (int i = 0; i < mot3.size(); ++i)
@@ -90,8 +101,8 @@ int main()
     }
 
     // Assign values to mot4
-    mot4[12] = std::copysign(1.0, omg4);                                                                                                                                                                                      // 3rd axis friction term 9 Vel 5
-    mot4[13] = std::copysign(1.0, omg4) * std::sqrt(std::fabs(omg4));                                                                                                                                                         // 3rd axis friction term 10 Vel 5
+    mot4[8] = std::copysign(1.0, omg4);                                                                                                                                                                                       // 3rd axis friction term 9 Vel 5
+    mot4[9] = std::copysign(1.0, omg4) * std::sqrt(std::fabs(omg4));                                                                                                                                                          // 3rd axis friction term 10 Vel 5
     mot4[19] = 1.0;                                                                                                                                                                                                           // Positive constant 5 (1.0 for the 5th constant)
     mot4[24] = std::cos(th4) * std::sin(th1) * std::sin(th2) * std::sin(th5) + std::cos(th1) * std::sin(th3) * std::sin(th4) * std::sin(th5) + std::cos(th2) * std::cos(th3) * std::sin(th1) * std::sin(th4) * std::sin(th5); // Param Mot 4
 
@@ -102,15 +113,116 @@ int main()
     }
 
     // Assign values to mot5
-    mot5[16] = std::copysign(1.0, omg5);                                                                                                                                                                                                                                                                                                      // 3rd axis friction term 11 Vel 6
-    mot5[17] = std::copysign(1.0, omg5) * std::sqrt(std::fabs(omg5));                                                                                                                                                                                                                                                                         // 3rd axis friction term 12 Vel 6
+    mot5[10] = std::copysign(1.0, omg5);                                                                                                                                                                                                                                                                                                      // 3rd axis friction term 11 Vel 6
+    mot5[11] = std::copysign(1.0, omg5) * std::sqrt(std::fabs(omg5));                                                                                                                                                                                                                                                                         // 3rd axis friction term 12 Vel 6
     mot5[20] = 1.0;                                                                                                                                                                                                                                                                                                                           // Positive constant 6 (1.0 for the 6th constant)
     mot5[25] = std::cos(th2) * std::sin(th1) * std::sin(th3) * std::sin(th5) - std::cos(th1) * std::cos(th3) * std::sin(th5) - std::cos(th1) * std::cos(th4) * std::cos(th5) * std::sin(th3) + std::cos(th5) * std::sin(th1) * std::sin(th2) * std::sin(th4) - std::cos(th2) * std::cos(th3) * std::cos(th4) * std::cos(th5) * std::sin(th1); // Param Mot 4
+
+    // Print the values of mot5 for verification
+    for (int i = 0; i < mot5.size(); ++i)
+    {
+        std::cout << "mot5[" << i << "] = " << mot5[i] << std::endl;
+    }
 
     // Assign values to mot6
     mot6[12] = std::copysign(1.0, omg6);                              // 3rd axis friction term 13 Vel 5
     mot6[13] = std::copysign(1.0, omg6) * std::sqrt(std::fabs(omg6)); // 3rd axis friction term 14 Vel 5
-    mot6[21] = 1.0;
+    mot6[20] = 1.0;
+
+    // Print the values of mot6 for verification
+    for (int i = 0; i < mot6.size(); ++i)
+    {
+        std::cout << "mot6[" << i << "] = " << mot6[i] << std::endl;
+    }
+    std::cout << "mot6.size() = " << mot6.size() << std::endl;
+
+    // Define trqS as a vector (populate with actual values)
+    std::vector<double> trqS = {trq0, trq1, trq2, trq3, trq4, trq5, trq6}; // Replace len with the actual length
+    std::cout << "trqS.size() = " << trqS.size() << std::endl;
+
+    // Combine mot0, mot1, mot2, mot3, mot4, mot5, and mot6 into a single vector motS
+    // std::vector<double> motS(mot0.size() + mot1.size() + mot2.size() + mot3.size() + mot4.size() + mot5.size() + mot6.size());
+    std::vector<double> motS;
+    motS.insert(motS.end(), mot0.begin(), mot0.end());
+    motS.insert(motS.end(), mot1.begin(), mot1.end());
+    motS.insert(motS.end(), mot2.begin(), mot2.end());
+    motS.insert(motS.end(), mot3.begin(), mot3.end());
+    motS.insert(motS.end(), mot4.begin(), mot4.end());
+    motS.insert(motS.end(), mot5.begin(), mot5.end());
+    motS.insert(motS.end(), mot6.begin(), mot6.end());
+
+    std::cout << "motS.size() = " << motS.size() << std::endl;
+
+    // Calculate para
+    Eigen::MatrixXd motS_matrix(motS.size(), 7);
+    Eigen::MatrixXd trqS_matrix(trqS.size(), 7);
+
+    // std::cout << "mot0.size() = " << mot0.size() << std::endl;
+    // std::cout << "mot1.size() = " << mot1.size() << std::endl;
+    // std::cout << "mot2.size() = " << mot2.size() << std::endl;
+    // std::cout << "mot3.size() = " << mot3.size() << std::endl;
+    // std::cout << "mot4.size() = " << mot4.size() << std::endl;
+    // std::cout << "mot5.size() = " << mot5.size() << std::endl;
+    // std::cout << "mot6.size() = " << mot6.size() << std::endl;
+    // std::cout << "motS.size() = " << motS.size() << std::endl;
+    // std::cout << "trqS.size() = " << trqS.size() << std::endl;
+
+    // for (int i = 0; i < motS.size(); ++i)
+    // {
+    //     std::cout << "motS[" << i << "] = " << motS[i] << std::endl;
+    // }
+
+    for (int i = 0; i < motS.size(); i++)
+    {
+        motS_matrix(i, 0) = motS[i];
+    }
+
+    for (int i = 0; i < trqS.size(); i++)
+    {
+        trqS_matrix(i, 0) = trqS[i];
+    }
+
+    std::cout << "motS_matrix.size() = " << motS_matrix.size() << std::endl;
+    std::cout << "motS_matrix.rows() = " << motS_matrix.rows() << std::endl;
+    std::cout << "motS_matrix.cols() = " << motS_matrix.cols() << std::endl;
+
+    // Create Pseudo Inverse of motS_matrix
+    // Eigen::MatrixXd para_matrix = motS_matrix.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(trqS_matrix);
+    Eigen::MatrixXd motS_pinv = motS_matrix.completeOrthogonalDecomposition().pseudoInverse();
+
+    std::cout << "motS_pinv.size() = " << motS_pinv.size() << std::endl;
+    std::cout << "motS_pinv.rows() = " << motS_pinv.rows() << std::endl;
+    std::cout << "motS_pinv.cols() = " << motS_pinv.cols() << std::endl;
+
+    // Eigen::MatrixXd para_matrix =  motS_pinv * trqS_matrix;
+
+    // Convert para_matrix to a vector
+    // std::vector<double> para(para_matrix.data(), para_matrix.data() + para_matrix.size());
+
+    // std::cout << "para.size() = " << para.size() << std::endl;
+
+    // for (int i = 0; i < para.size(); ++i)
+    // {
+    //     std::cout << "para[" << i << "] = " << para[i] << std::endl;
+    // }
+
+    // // Calculate trqT
+    // Eigen::MatrixXd para_matrix_reversed = para_matrix.transpose();
+    // Eigen::MatrixXd motS_matrix_reversed = motS_matrix.transpose();
+    // Eigen::MatrixXd trqT_matrix = motS_matrix_reversed * para_matrix_reversed;
+    // std::vector<double> trqT = std::vector<double>(trqT_matrix.data(), trqT_matrix.data() + trqT_matrix.rows() * trqT_matrix.cols());
+
+    // std::cout << "param = " << para_matrix_reversed << std::endl;
+
+    // Split trqT into trqT0, trqT1, trqT2, trqT3, trqT4, trqT5, and trqT6 based on the division
+
+    // trqT0 = ...
+    // trqT1 = ...
+    // trqT2 = ...
+    // trqT3 = ...
+    // trqT4 = ...
+    // trqT5 = ...
+    // trqT6 = ...
 
     return 0;
 }
