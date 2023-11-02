@@ -37,25 +37,35 @@ int main()
     // double trq7 = 0;
 
     // Assuming you have populated th0 to th6 and omg0 to omg6 variables
-    std::vector<double> mot0(25, 0.0);
-    std::vector<double> mot1(25, 0.0);
-    std::vector<double> mot2(25, 0.0);
-    std::vector<double> mot3(25, 0.0);
-    std::vector<double> mot4(25, 0.0);
-    std::vector<double> mot5(25, 0.0);
-    std::vector<double> mot6(25, 0.0);
+    Eigen::VectorXd mot0(25);
+    Eigen::VectorXd mot1(25);
+    Eigen::VectorXd mot2(25);
+    Eigen::VectorXd mot3(25);
+    Eigen::VectorXd mot4(25);
+    Eigen::VectorXd mot5(25);
+    Eigen::VectorXd mot6(25);
     // std::vector<double> mot7(26, 0.0);
+
+    // mot0 = Eigen::VectorXd::Zero(0, mot0.cols());
+    // mot1 = Eigen::VectorXd::Zero(0, mot1.cols());
+    // mot2 = Eigen::VectorXd::Zero(0, mot2.cols());
+    // mot3 = Eigen::VectorXd::Zero(0, mot3.cols());
+    // mot4 = Eigen::VectorXd::Zero(0, mot4.cols());
+    // mot5 = Eigen::VectorXd::Zero(0, mot5.cols());
+    // mot6 = Eigen::VectorXd::Zero(0, mot6.cols());
+
+    // std::cout << "mot0.size() = " << mot0.size() << std::endl;
 
     // Assign values to mot0
     mot0[0] = std::copysign(1.0, omg0);                              // 0st axis friction term 1
     mot0[1] = std::copysign(1.0, omg0) * std::sqrt(std::fabs(omg0)); // 0st axis friction term 2
     mot0[14] = 1.0;                                                  // Positive constant 1 (Note: MATLAB index 15 corresponds to C++ index 14)
 
-    // Print the values of mot0 for verification
-    for (int i = 0; i < mot0.size(); ++i)
-    {
-        std::cout << "mot0[" << i << "] = " << mot0[i] << std::endl;
-    }
+    // // Print the values of mot0 for verification
+    // for (int i = 0; i < mot0.size(); ++i)
+    // {
+    //     std::cout << "mot0[" << i << "] = " << mot0[i] << std::endl;
+    // }
 
     // Assign values to mot1
     mot1[2] = std::copysign(1.0, omg1);                                                                                                                                                                                                                                                                        // 1st axis friction term 3 Vel 2
@@ -66,11 +76,11 @@ int main()
     mot1[23] = -std::cos(th3) * std::sin(th1) - std::cos(th1) * std::cos(th2) * std::sin(th3);                                                                                                                                                                                                                 // Param Mot 3
     mot1[24] = -std::cos(th3) * std::cos(th5) * std::sin(th1) - std::cos(th2) * std::cos(th5) * std::sin(th3) + std::cos(th1) * std::sin(th2) * std::sin(th4) * std::sin(th5) + std::cos(th4) * std::sin(th1) * std::sin(th3) * std::sin(th5) - std::cos(th2) * std::cos(th3) * std::cos(th4) * std::sin(th5); // Param Mot 4
 
-    // Print the values of mot1 for verification
-    for (int i = 0; i < mot1.size(); ++i)
-    {
-        std::cout << "mot1[" << i << "] = " << mot1[i] << std::endl;
-    }
+    // // Print the values of mot1 for verification
+    // for (int i = 0; i < mot1.size(); ++i)
+    // {
+    //     std::cout << "mot1[" << i << "] = " << mot1[i] << std::endl;
+    // }
 
     // Assign values to mot2
     mot2[4] = std::copysign(1.0, omg2);                                                                                                                                                                                       // 1st axis friction term 3 Vel 2
@@ -80,11 +90,11 @@ int main()
     mot2[23] = std::sin(th1) * std::sin(th2) * std::sin(th3);                                                                                                                                                                 // Param Mot 3
     mot2[24] = std::cos(th5) * std::sin(th1) * std::sin(th2) * std::sin(th3) + std::cos(th2) * std::sin(th1) * std::sin(th4) * std::sin(th5) + std::cos(th3) * std::cos(th4) * std::sin(th1) * std::sin(th2) * std::sin(th5); // Param Mot 4
 
-    // Print the values of mot1 for verification
-    for (int i = 0; i < mot2.size(); ++i)
-    {
-        std::cout << "mot2[" << i << "] = " << mot2[i] << std::endl;
-    }
+    // // Print the values of mot1 for verification
+    // for (int i = 0; i < mot2.size(); ++i)
+    // {
+    //     std::cout << "mot2[" << i << "] = " << mot2[i] << std::endl;
+    // }
 
     // Assign values to mot3
     mot3[6] = std::copysign(1.0, omg3);                                                                                                                                                                                                                                        // 1st axis friction term 7 Vel 4
@@ -94,11 +104,11 @@ int main()
     mot3[23] = -std::cos(th1) * std::sin(th3) - std::cos(th2) * std::cos(th3) * std::sin(th1);                                                                                                                                                                                 // Param Mot 3
     mot3[24] = -std::cos(th1) * std::cos(th5) * std::sin(th3) - std::cos(th2) * std::cos(th3) * std::cos(th5) * std::sin(th1) - std::cos(th1) * std::cos(th3) * std::cos(th4) * std::sin(th5) + std::cos(th2) * std::cos(th4) * std::sin(th1) * std::sin(th3) * std::sin(th5); // Param Mot 4
 
-    // Print the values of mot3 for verification
-    for (int i = 0; i < mot3.size(); ++i)
-    {
-        std::cout << "mot3[" << i << "] = " << mot3[i] << std::endl;
-    }
+    // // Print the values of mot3 for verification
+    // for (int i = 0; i < mot3.size(); ++i)
+    // {
+    //     std::cout << "mot3[" << i << "] = " << mot3[i] << std::endl;
+    // }
 
     // Assign values to mot4
     mot4[8] = std::copysign(1.0, omg4);                                                                                                                                                                                       // 3rd axis friction term 9 Vel 5
@@ -106,93 +116,133 @@ int main()
     mot4[19] = 1.0;                                                                                                                                                                                                           // Positive constant 5 (1.0 for the 5th constant)
     mot4[24] = std::cos(th4) * std::sin(th1) * std::sin(th2) * std::sin(th5) + std::cos(th1) * std::sin(th3) * std::sin(th4) * std::sin(th5) + std::cos(th2) * std::cos(th3) * std::sin(th1) * std::sin(th4) * std::sin(th5); // Param Mot 4
 
-    // Print the values of mot4 for verification
-    for (int i = 0; i < mot4.size(); ++i)
-    {
-        std::cout << "mot4[" << i << "] = " << mot4[i] << std::endl;
-    }
+    // // Print the values of mot4 for verification
+    // for (int i = 0; i < mot4.size(); ++i)
+    // {
+    //     std::cout << "mot4[" << i << "] = " << mot4[i] << std::endl;
+    // }
 
     // Assign values to mot5
     mot5[10] = std::copysign(1.0, omg5);                                                                                                                                                                                                                                                                                                      // 3rd axis friction term 11 Vel 6
     mot5[11] = std::copysign(1.0, omg5) * std::sqrt(std::fabs(omg5));                                                                                                                                                                                                                                                                         // 3rd axis friction term 12 Vel 6
     mot5[20] = 1.0;                                                                                                                                                                                                                                                                                                                           // Positive constant 6 (1.0 for the 6th constant)
-    mot5[25] = std::cos(th2) * std::sin(th1) * std::sin(th3) * std::sin(th5) - std::cos(th1) * std::cos(th3) * std::sin(th5) - std::cos(th1) * std::cos(th4) * std::cos(th5) * std::sin(th3) + std::cos(th5) * std::sin(th1) * std::sin(th2) * std::sin(th4) - std::cos(th2) * std::cos(th3) * std::cos(th4) * std::cos(th5) * std::sin(th1); // Param Mot 4
+    mot5[24] = std::cos(th2) * std::sin(th1) * std::sin(th3) * std::sin(th5) - std::cos(th1) * std::cos(th3) * std::sin(th5) - std::cos(th1) * std::cos(th4) * std::cos(th5) * std::sin(th3) + std::cos(th5) * std::sin(th1) * std::sin(th2) * std::sin(th4) - std::cos(th2) * std::cos(th3) * std::cos(th4) * std::cos(th5) * std::sin(th1); // Param Mot 4
 
-    // Print the values of mot5 for verification
-    for (int i = 0; i < mot5.size(); ++i)
-    {
-        std::cout << "mot5[" << i << "] = " << mot5[i] << std::endl;
-    }
+    // // Print the values of mot5 for verification
+    // for (int i = 0; i < mot5.size(); ++i)
+    // {
+    //     std::cout << "mot5[" << i << "] = " << mot5[i] << std::endl;
+    // }
 
     // Assign values to mot6
     mot6[12] = std::copysign(1.0, omg6);                              // 3rd axis friction term 13 Vel 5
     mot6[13] = std::copysign(1.0, omg6) * std::sqrt(std::fabs(omg6)); // 3rd axis friction term 14 Vel 5
     mot6[20] = 1.0;
 
-    // Print the values of mot6 for verification
-    for (int i = 0; i < mot6.size(); ++i)
-    {
-        std::cout << "mot6[" << i << "] = " << mot6[i] << std::endl;
-    }
-    std::cout << "mot6.size() = " << mot6.size() << std::endl;
+    // // Print the values of mot6 for verification
+    // for (int i = 0; i < mot6.size(); ++i)
+    // {
+    //     std::cout << "mot6[" << i << "] = " << mot6[i] << std::endl;
+    // }
+    // std::cout << "mot6.size() = " << mot6.size() << std::endl;
 
     // Define trqS as a vector (populate with actual values)
-    std::vector<double> trqS = {trq0, trq1, trq2, trq3, trq4, trq5, trq6}; // Replace len with the actual length
-    std::cout << "trqS.size() = " << trqS.size() << std::endl;
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> trqS(7, 1);
 
-    // Combine mot0, mot1, mot2, mot3, mot4, mot5, and mot6 into a single vector motS
-    // std::vector<double> motS(mot0.size() + mot1.size() + mot2.size() + mot3.size() + mot4.size() + mot5.size() + mot6.size());
-    std::vector<double> motS;
-    motS.insert(motS.end(), mot0.begin(), mot0.end());
-    motS.insert(motS.end(), mot1.begin(), mot1.end());
-    motS.insert(motS.end(), mot2.begin(), mot2.end());
-    motS.insert(motS.end(), mot3.begin(), mot3.end());
-    motS.insert(motS.end(), mot4.begin(), mot4.end());
-    motS.insert(motS.end(), mot5.begin(), mot5.end());
-    motS.insert(motS.end(), mot6.begin(), mot6.end());
+    trqS.row(0) << trq0;
+    trqS.row(1) << trq1;
+    trqS.row(2) << trq2;
+    trqS.row(3) << trq3;
+    trqS.row(4) << trq4;
+    trqS.row(5) << trq5;
+    trqS.row(6) << trq6;
 
-    std::cout << "motS.size() = " << motS.size() << std::endl;
+    // std::cout << "trqS" << std::endl
+    //           << trqS << std::endl;
 
-    // Calculate para
-    Eigen::MatrixXd motS_matrix(motS.size(), 7);
-    Eigen::MatrixXd trqS_matrix(trqS.size(), 7);
+    // Eigen::MatrixXd motS; // Declare a matrix to store the concatenated result
 
-    // std::cout << "mot0.size() = " << mot0.size() << std::endl;
-    // std::cout << "mot1.size() = " << mot1.size() << std::endl;
-    // std::cout << "mot2.size() = " << mot2.size() << std::endl;
-    // std::cout << "mot3.size() = " << mot3.size() << std::endl;
-    // std::cout << "mot4.size() = " << mot4.size() << std::endl;
-    // std::cout << "mot5.size() = " << mot5.size() << std::endl;
-    // std::cout << "mot6.size() = " << mot6.size() << std::endl;
+    // // Concatenate the matrices vertically
+    // // motS = Eigen::MatrixXd::Zero(0, mot0.cols()); // Initialize an empty matrix to match the dimensions of mot0
+    // motS.conservativeResize(mot0.cols() + mot1.cols() + mot2.cols() + mot3.cols() + mot4.cols() + mot5.cols() + mot6.cols(), mot0.rows());
+
     // std::cout << "motS.size() = " << motS.size() << std::endl;
-    // std::cout << "trqS.size() = " << trqS.size() << std::endl;
+    // std::cout << "motS.rows() = " << motS.rows() << std::endl;
+    // std::cout << "motS.cols() = " << motS.cols() << std::endl;
 
-    // for (int i = 0; i < motS.size(); ++i)
-    // {
-    //     std::cout << "motS[" << i << "] = " << motS[i] << std::endl;
-    // }
+    // Eigen::Matrix<double, 1, Eigen::Dynamic> v2(25);
 
-    for (int i = 0; i < motS.size(); i++)
-    {
-        motS_matrix(i, 0) = motS[i];
-    }
+    // Eigen::VectorXd v1(25);
+    // v1 << 1, 0, 0, 0, 3, 4, 5, 6, 7, 8, 9, 2, 4, 5, 1, 3, 4, 5, 6, 7, 1, 4, 5, 3, 4;
 
-    for (int i = 0; i < trqS.size(); i++)
-    {
-        trqS_matrix(i, 0) = trqS[i];
-    }
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> motS(7, 25);
 
-    std::cout << "motS_matrix.size() = " << motS_matrix.size() << std::endl;
-    std::cout << "motS_matrix.rows() = " << motS_matrix.rows() << std::endl;
-    std::cout << "motS_matrix.cols() = " << motS_matrix.cols() << std::endl;
+    motS.row(0) = mot0.transpose();
+    motS.row(1) = mot1.transpose();
+    motS.row(2) = mot2.transpose();
+    motS.row(3) = mot3.transpose();
+    motS.row(4) = mot4.transpose();
+    motS.row(5) = mot5.transpose();
+    motS.row(6) = mot6.transpose();
+
+    // std::cout << "motS" << std::endl
+    //           << motS << std::endl;
 
     // Create Pseudo Inverse of motS_matrix
-    // Eigen::MatrixXd para_matrix = motS_matrix.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(trqS_matrix);
-    Eigen::MatrixXd motS_pinv = motS_matrix.completeOrthogonalDecomposition().pseudoInverse();
+    Eigen::MatrixXd motS_pinv = motS.completeOrthogonalDecomposition().pseudoInverse();
+    // std::cout << "motS_pinv" << std::endl
+    //           << motS_pinv << std::endl;
 
-    std::cout << "motS_pinv.size() = " << motS_pinv.size() << std::endl;
-    std::cout << "motS_pinv.rows() = " << motS_pinv.rows() << std::endl;
-    std::cout << "motS_pinv.cols() = " << motS_pinv.cols() << std::endl;
+    Eigen::MatrixXd param = motS_pinv * trqS;
+    std::cout << "param" << std::endl
+              << param << std::endl;
+
+    // // std::cout << "motS.size() = " << motS.size() << std::endl;
+
+    // Eigen::MatrixXd motS;
+
+    // motS = Eigen::MatrixXd::Zero(0, mot0.cols()); // Initialize an empty matrix to match the dimensions of mot0
+
+    // // Calculate para
+    // Eigen::MatrixXd motS_matrix(motS.size(), 7);
+    // Eigen::MatrixXd trqS_matrix(trqS.size(), 7);
+
+    // // std::cout << "mot0.size() = " << mot0.size() << std::endl;
+    // // std::cout << "mot1.size() = " << mot1.size() << std::endl;
+    // // std::cout << "mot2.size() = " << mot2.size() << std::endl;
+    // // std::cout << "mot3.size() = " << mot3.size() << std::endl;
+    // // std::cout << "mot4.size() = " << mot4.size() << std::endl;
+    // // std::cout << "mot5.size() = " << mot5.size() << std::endl;
+    // // std::cout << "mot6.size() = " << mot6.size() << std::endl;
+    // // std::cout << "motS.size() = " << motS.size() << std::endl;
+    // // std::cout << "trqS.size() = " << trqS.size() << std::endl;
+
+    // // for (int i = 0; i < motS.size(); ++i)
+    // // {
+    // //     std::cout << "motS[" << i << "] = " << motS[i] << std::endl;
+    // // }
+
+    // for (int i = 0; i < motS.size(); i++)
+    // {
+    //     motS_matrix(i, 0) = motS[i];
+    // }
+
+    // for (int i = 0; i < trqS.size(); i++)
+    // {
+    //     trqS_matrix(i, 0) = trqS[i];
+    // }
+
+    // std::cout << "motS_matrix.size() = " << motS_matrix.size() << std::endl;
+    // std::cout << "motS_matrix.rows() = " << motS_matrix.rows() << std::endl;
+    // std::cout << "motS_matrix.cols() = " << motS_matrix.cols() << std::endl;
+
+    // // Create Pseudo Inverse of motS_matrix
+    // // Eigen::MatrixXd para_matrix = motS_matrix.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(trqS_matrix);
+    // Eigen::MatrixXd motS_pinv = motS_matrix.completeOrthogonalDecomposition().pseudoInverse();
+
+    // std::cout << "motS_pinv.size() = " << motS_pinv.size() << std::endl;
+    // std::cout << "motS_pinv.rows() = " << motS_pinv.rows() << std::endl;
+    // std::cout << "motS_pinv.cols() = " << motS_pinv.cols() << std::endl;
 
     // Eigen::MatrixXd para_matrix =  motS_pinv * trqS_matrix;
 
