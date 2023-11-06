@@ -29,13 +29,16 @@
 
 #include "obtain_data/dynamixel_node.hpp"
 #include "obtain_data/crane_x7_comm.hpp"
+#include "obtain_data/dynamics.hpp"
 // #include "obtain_data/globals.hpp"
 #include "crane_x7_comm.cpp"
+#include "dynamics.cpp"
 
 using namespace std::chrono_literals;
 
 // Set up parameters
 const std::string JOINTSTATE_TOPIC = "/joint_state";
+const std::string ESTJOINTSTATE_TOPIC = "/est_joint_state";
 
 // Frequency wave
 float Fc_1[] = {0.1166, 0.1263, 0.1451, 0.1602, 0.1654, 0.1689, 0.1748};
@@ -70,6 +73,7 @@ public:
     {
         // Setup pub/sub
         joint_pub_ = create_publisher<sensor_msgs::msg::JointState>(JOINTSTATE_TOPIC, rclcpp::SystemDefaultsQoS());
+        est_joint_pub_ = create_publisher<sensor_msgs::msg::JointState>(ESTJOINTSTATE_TOPIC, rclcpp::SystemDefaultsQoS());
         timer_ = this->create_wall_timer(
             1ms, std::bind(&DynamixelStatePublisher::timer_callback, this));
     }
@@ -77,6 +81,7 @@ public:
 private:
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr est_joint_pub_;
 
     // JointState jointState;
 
@@ -86,7 +91,8 @@ private:
 
     double present_theta[JOINT_NUM] = {0};
     double present_angvel[JOINT_NUM] = {0};
-    double present_current[JOINT_NUM] = {0};
+    double present_torque[JOINT_NUM] = {0};
+    double estimated_torque[JOINT_NUM] = {0};
 
     void timer_callback()
     {
@@ -138,20 +144,33 @@ private:
 
             safe_start(20);
 
-            for (j = 0; j < MAX_DATA; j++)
+            for (j = 0; j < 3000000; j++)
             {
-                for (i = 0; i < 7; i++)
-                {
-                    th_run[i] = th[i][j];
-                }
+                // for (i = 0; i < 7; i++)
+                // {
+                //     th_run[i] = 0;
+                // }
+
+                th_run[0] = 0;
+                th_run[1] = 0;
+                th_run[2] = 0;
+                th_run[3] = 57.5;
+                th_run[4] = 0;
+                th_run[5] = 0;
+                th_run[6] = 0;
 
                 // usleep(50000);
                 setCranex7Angle(th_run);
-                // getCranex7JointState(present_theta, present_angvel, present_current);
-                getCranex7Current(present_current);
+                // getCranex7JointState(present_theta, present_angvel, present_torque);
+                getCranex7Velocity(present_angvel);
+                getCranex7Torque(present_torque);
+
+                getCranex7EstimatedTorque(th_run, present_angvel, present_torque, estimated_torque);
 
                 // std::cout << j << " " << present_theta[0] << " " << present_theta[1] << " " << present_theta[2] << " " << present_theta[3] << " " << present_theta[4] << " " << present_theta[5] << " " << present_theta[6] << " " << present_theta[7] << std::endl;
-                //std::cout << j << " " << present_current[0] << " " << present_current[1] << " " << present_current[2] << " " << present_current[3] << " " << present_current[4] << " " << present_current[5] << " " << present_current[6] << " " << present_current[7] << std::endl;
+                // std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
+
+                std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
 
                 // Create the messages we might publish
                 auto joint_msg = std::make_unique<sensor_msgs::msg::JointState>();
@@ -167,15 +186,15 @@ private:
                 {
                     joint_msg->name[i] = "cranex7_j" + std::to_string(i);
 
-                    //joint_msg->position[i] = present_theta[i];
-                    //joint_msg->velocity[i] = present_angvel[i];
-                    joint_msg->effort[i] = present_current[i];
+                    // joint_msg->position[i] = present_theta[i];
+                    // joint_msg->velocity[i] = present_angvel[i];
+                    joint_msg->effort[i] = present_torque[i];
                 }
 
                 joint_msg->header.stamp = now();
                 joint_pub_->publish(std::move(joint_msg));
 
-                usleep(1000);
+                // usleep(1000);
             }
 
             safe_start(20);

@@ -3,37 +3,53 @@
 #include <cmath>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/QR>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-int main()
+#include "obtain_data/crane_x7_comm.hpp"
+#include "obtain_data/dynamics.hpp"
+
+/**
+ * @fn int getCranex7EstimatedTorque(double *)
+ * @brief Function to get joint torque estimation
+ * @param[in] angle_array[] command angle array
+ * @param[in] vel_array[] command velocity array
+ * @param[in] torque_array[] command velocity array
+ * @param[out] est_torque_array[] present torque array
+ * @return Success or failure.
+ */
+
+int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *torque_array, double *est_torque_array)
 {
     // int len = 10; // Replace with your desired length
 
     // Define th0 to th7 and omg0 to omg7 as double
-    double th0 = 0.4537;
-    double th1 = 0.0681;
-    double th2 = 0.1722;
-    double th3 = -0.4079;
-    double th4 = -0.0130;
-    double th5 = 0.4341;
-    double th6 = 1.6687;
+    double th0 = angle_array[0];
+    double th1 = angle_array[1];
+    double th2 = angle_array[2];
+    double th3 = angle_array[3];
+    double th4 = angle_array[4];
+    double th5 = angle_array[5];
+    double th6 = angle_array[6];
     // double th7 = 0;
 
-    double omg0 = 0.2755;
-    double omg1 = 0.0883;
-    double omg2 = 0.5520;
-    double omg3 = -0.3350;
-    double omg4 = 2.7995;
-    double omg5 = 1.0280;
-    double omg6 = 1.9500;
+    double omg0 = vel_array[0];
+    double omg1 = vel_array[1];
+    double omg2 = vel_array[2];
+    double omg3 = vel_array[3];
+    double omg4 = vel_array[4];
+    double omg5 = vel_array[5];
+    double omg6 = vel_array[6];
     // double omg7 = 0;
 
-    double trq0 = 0;
-    double trq1 = 1.2636;
-    double trq2 = -0.0187;
-    double trq3 = 0.8979;
-    double trq4 = 0.0499;
-    double trq5 = 0.5799;
-    double trq6 = 0.0249;
+    double trq0 = torque_array[0];
+    double trq1 = torque_array[1];
+    double trq2 = torque_array[2];
+    double trq3 = torque_array[3];
+    double trq4 = torque_array[4];
+    double trq5 = torque_array[5];
+    double trq6 = torque_array[6];
     // double trq7 = 0;
 
     // Assuming you have populated th0 to th6 and omg0 to omg6 variables
@@ -194,8 +210,22 @@ int main()
     //           << motS_pinv << std::endl;
 
     Eigen::MatrixXd param = motS_pinv * trqS;
-    std::cout << "param" << std::endl
-              << param << std::endl;
+    // std::cout << "param" << std::endl
+    //           << param << std::endl;
+
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> trqT(7, 1);
+
+    trqT = motS * param;
+    std::cout << "trqT" << std::endl
+              << trqT << std::endl;
+
+    for (int i = 0; i < JOINT_NUM; i++)
+    {
+        est_torque_array[i] = trqT(i);
+    }
+
+    std::cout << "est_torque_array" << std::endl
+              << est_torque_array << std::endl;
 
     // // std::cout << "motS.size() = " << motS.size() << std::endl;
 

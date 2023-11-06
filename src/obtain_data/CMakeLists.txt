@@ -36,13 +36,13 @@ add_executable(publish src/publish.cpp)
 ament_target_dependencies(publish PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 #rclcpp_components_register_nodes(jointstate "obtain_data::DynamixelStatePublisher")
 
-add_executable(dynamics src/dynamics.cpp)
-ament_target_dependencies(dynamics PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+# add_executable(dynamics src/dynamics.cpp)
+# ament_target_dependencies(dynamics PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 install(TARGETS
   obtain
   publish
-  dynamics
+  # dynamics
   DESTINATION lib/${PROJECT_NAME}
 )
 

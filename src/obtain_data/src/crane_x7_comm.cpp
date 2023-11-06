@@ -804,12 +804,12 @@ int getCranex7Velocity(double *angular_velocity_array)
 }
 
 /**
- * @fn int getCranex7Current(double *)
+ * @fn int getCranex7Torque(double *)
  * @brief Function to get joint current
  * @param[out] torque_array[] present torque array
  * @return Success or failure.
  */
-int getCranex7Current(double *torque_array)
+int getCranex7Torque(double *torque_array)
 {
     int16_t present_current[JOINT_NUM] = {0};
 

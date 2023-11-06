@@ -84,7 +84,7 @@ int setCranex7Torque(double *);
 int getCranex7JointState(double *, double *, double *);
 int getCranex7Position(double *);
 int getCranex7Velocity(double *);
-int getCranex7Current(double *);
+int getCranex7Torque(double *);
 void brakeCranex7Joint(void);
 void closeCranex7Port(void);
 void safe_start(int *);

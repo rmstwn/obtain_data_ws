@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     // Feedback variables
     double present_position[JOINT_NUM] = {0};
     double present_velocity[JOINT_NUM] = {0};
-    double present_current[JOINT_NUM] = {0};
+    double present_torque[JOINT_NUM] = {0};
 
     // Create log file
     std::ofstream data;
@@ -146,8 +146,8 @@ int main(int argc, char *argv[])
 
         // usleep(50000);
         setCranex7Angle(th_run);
-        // getCranex7JointState(present_position, present_velocity, present_current);
-        getCranex7Current(present_current);
+        // getCranex7JointState(present_position, present_velocity, present_torque);
+        getCranex7Torque(present_torque);
 
         auto end = std::chrono::high_resolution_clock::now();
 
@@ -162,16 +162,16 @@ int main(int argc, char *argv[])
              << th[4][j] * (M_PI / 180) << ","
              << th[5][j] * (M_PI / 180) << ","
              << th[6][j] * (M_PI / 180) << ","
-             << (double)present_current[0] << ","
-             << (double)present_current[1] << ","
-             << (double)present_current[2] << ","
-             << (double)present_current[3] << ","
-             << (double)present_current[4] << ","
-             << (double)present_current[5] << ","
-             << (double)present_current[6] << std::endl;
+             << (double)present_torque[0] << ","
+             << (double)present_torque[1] << ","
+             << (double)present_torque[2] << ","
+             << (double)present_torque[3] << ","
+             << (double)present_torque[4] << ","
+             << (double)present_torque[5] << ","
+             << (double)present_torque[6] << std::endl;
 
-        std::cout << j << " " << present_current[0] << " " << present_current[1] << " " << present_current[2] << " " << present_current[3] << " " << present_current[4] << " " << present_current[5] << " " << present_current[6] << " " << present_current[7] << std::endl;
-        //  std::cout << j << " " << present_current[0] << " " << present_current[1] << " " << present_current[2] << " " << present_current[3] << " " << present_current[4] << " " << present_current[5] << " " << present_current[6] << " " << present_current[7] << std::endl;
+        std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
+        //  std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
 
         usleep(1000);
     }
