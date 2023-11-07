@@ -170,29 +170,48 @@ private:
                 // std::cout << j << " " << present_theta[0] << " " << present_theta[1] << " " << present_theta[2] << " " << present_theta[3] << " " << present_theta[4] << " " << present_theta[5] << " " << present_theta[6] << " " << present_theta[7] << std::endl;
                 // std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
 
-                std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
+                std::cout << j << " " << estimated_torque[0] << " " << estimated_torque[1] << " " << estimated_torque[2] << " " << estimated_torque[3] << " " << estimated_torque[4] << " " << estimated_torque[5] << " " << estimated_torque[6] << " " << estimated_torque[7] << std::endl;
 
-                // Create the messages we might publish
+                // Create the messages we might publish Joint state data
                 auto joint_msg = std::make_unique<sensor_msgs::msg::JointState>();
+                auto est_joint_msg = std::make_unique<sensor_msgs::msg::JointState>();
 
                 joint_msg->name.resize(JOINT_NUM);
                 joint_msg->position.resize(JOINT_NUM);
                 joint_msg->velocity.resize(JOINT_NUM);
                 joint_msg->effort.resize(JOINT_NUM);
 
+                est_joint_msg->name.resize(JOINT_NUM);
+                est_joint_msg->position.resize(JOINT_NUM);
+                est_joint_msg->velocity.resize(JOINT_NUM);
+                est_joint_msg->effort.resize(JOINT_NUM);
+
                 joint_msg->header.frame_id = "CraneX7";
+                est_joint_msg->header.frame_id = "Estimated_CraneX7";
 
                 for (int i = 0; i < JOINT_NUM; i++)
                 {
                     joint_msg->name[i] = "cranex7_j" + std::to_string(i);
 
                     // joint_msg->position[i] = present_theta[i];
-                    // joint_msg->velocity[i] = present_angvel[i];
+                    joint_msg->velocity[i] = present_angvel[i];
                     joint_msg->effort[i] = present_torque[i];
+                }
+
+                for (int i = 0; i < JOINT_NUM; i++)
+                {
+                    est_joint_msg->name[i] = "est_cranex7_j" + std::to_string(i);
+
+                    // joint_msg->position[i] = present_theta[i];
+                    // joint_msg->velocity[i] = present_angvel[i];
+                    est_joint_msg->effort[i] = estimated_torque[i];
                 }
 
                 joint_msg->header.stamp = now();
                 joint_pub_->publish(std::move(joint_msg));
+
+                est_joint_msg->header.stamp = now();
+                est_joint_pub_->publish(std::move(est_joint_msg));
 
                 // usleep(1000);
             }
