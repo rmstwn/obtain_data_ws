@@ -210,7 +210,7 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
 
     // Split trqT in
     // trqT6 = ...to est_torque_array based on the division
-    for (int i = 0; i < JOINT_NUM; i++)
+    for (int i = 0; i < 7; i++)
     {
         est_torque_array[i] = trqT(i);
     }

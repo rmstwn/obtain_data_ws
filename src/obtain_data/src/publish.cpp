@@ -63,6 +63,7 @@ double th_d[JOINT_NUM][MAX_DATA];
 double th_dd[JOINT_NUM][MAX_DATA];
 
 double th_run[JOINT_NUM];
+double th_rad[JOINT_NUM];
 
 class DynamixelStatePublisher : public rclcpp::Node
 {
@@ -144,20 +145,22 @@ private:
 
             safe_start(20);
 
-            for (j = 0; j < 3000000; j++)
+            for (j = 0; j < MAX_DATA; j++)
+            // while(1)
             {
-                // for (i = 0; i < 7; i++)
-                // {
-                //     th_run[i] = 0;
-                // }
+                for (i = 0; i < 7; i++)
+                {
+                    th_run[i] = th[i][j];
+                    th_rad[i] = th[i][j] * (M_PI / 180);
+                }
 
-                th_run[0] = 0;
-                th_run[1] = 0;
-                th_run[2] = 0;
-                th_run[3] = 57.5;
-                th_run[4] = 0;
-                th_run[5] = 0;
-                th_run[6] = 0;
+                // th_run[0] = 0
+                // th_run[1] = 10;
+                // th_run[2] = 0;
+                // th_run[3] = 57.5;
+                // th_run[4] = 0;
+                // th_run[5] = 0;
+                // th_run[6] = 0;
 
                 // usleep(50000);
                 setCranex7Angle(th_run);
@@ -165,12 +168,29 @@ private:
                 getCranex7Velocity(present_angvel);
                 getCranex7Torque(present_torque);
 
-                getCranex7EstimatedTorque(th_run, present_angvel, present_torque, estimated_torque);
+                // present_torque[0] = 0;
+                // present_torque[1] = 0;
+                // present_torque[2] = 0;
+                // present_torque[3] = 0;
+                // present_torque[4] = 0;
+                // present_torque[5] = 0;
+                // present_torque[6] = 0;
+
+                // for (int i = 0; i < JOINT_NUM; ++i)
+                // {
+                //     std::cout << "mot0[" << i << "] = " << mot0[i] << std::endl;
+                // }
+
+                // std::cout << j << " " << th_run[0] << " " << th_run[1] << " " << th_run[2] << " " << th_run[3] << " " << th_run[4] << " " << th_run[5] << " " << th_run[6] << " " << th_run[7] << std::endl;
+                // std::cout << j << " " << present_angvel[0] << " " << present_angvel[1] << " " << present_angvel[2] << " " << present_angvel[3] << " " << present_angvel[4] << " " << present_angvel[5] << " " << present_angvel[6] << " " << present_angvel[7] << std::endl;
+                std::cout << "Feedback " << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
+
+                getCranex7EstimatedTorque(th_rad, present_angvel, present_torque, estimated_torque);
 
                 // std::cout << j << " " << present_theta[0] << " " << present_theta[1] << " " << present_theta[2] << " " << present_theta[3] << " " << present_theta[4] << " " << present_theta[5] << " " << present_theta[6] << " " << present_theta[7] << std::endl;
                 // std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
 
-                std::cout << j << " " << estimated_torque[0] << " " << estimated_torque[1] << " " << estimated_torque[2] << " " << estimated_torque[3] << " " << estimated_torque[4] << " " << estimated_torque[5] << " " << estimated_torque[6] << " " << estimated_torque[7] << std::endl;
+                std::cout << "Estimated " << j << " " << estimated_torque[0] << " " << estimated_torque[1] << " " << estimated_torque[2] << " " << estimated_torque[3] << " " << estimated_torque[4] << " " << estimated_torque[5] << " " << estimated_torque[6] << " " << estimated_torque[7] << std::endl;
 
                 // Create the messages we might publish Joint state data
                 auto joint_msg = std::make_unique<sensor_msgs::msg::JointState>();

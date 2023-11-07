@@ -52,7 +52,7 @@
 
 // Default setting
 #define BAUDRATE 3000000           // Default Baudrate of DYNAMIXEL X series
-#define SERIAL_PORT "/dev/ttyUSB0" // [Linux]: "/dev/ttyUSB*", [Windows]: "COM*"
+#define SERIAL_PORT "/dev/ttyUSB1" // [Linux]: "/dev/ttyUSB*", [Windows]: "COM*"
 
 //// Definition of crane-x7 ////
 #define XM540_W270_JOINT 1 // only 2nd joint servo motor is XM540_W270 (other XM430_W350)
@@ -63,7 +63,7 @@
 #define PI 3.14159265
 #endif
 
-#define MAX_DATA 10000
+#define MAX_DATA 50000
 
 #define ESC_ASCII_VALUE 0x1b
 
