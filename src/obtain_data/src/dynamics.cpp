@@ -13,10 +13,10 @@
 /**
  * @fn int getCranex7EstimatedTorque(double *)
  * @brief Function to get joint torque estimation
- * @param[in] angle_array[] command angle array
- * @param[in] vel_array[] command velocity array
- * @param[in] torque_array[] command velocity array
- * @param[out] est_torque_array[] present torque array
+ * @param[in] angle_array[] input angle array
+ * @param[in] vel_array[] input feedback velocity array
+ * @param[in] torque_array[] input feedback torque array
+ * @param[out] est_torque_array[] output estimated torque array
  * @return Success or failure.
  */
 
@@ -61,14 +61,6 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     Eigen::VectorXd mot5(25);
     Eigen::VectorXd mot6(25);
     // std::vector<double> mot7(26, 0.0);
-
-    // mot0 = Eigen::VectorXd::Zero(0, mot0.cols());
-    // mot1 = Eigen::VectorXd::Zero(0, mot1.cols());
-    // mot2 = Eigen::VectorXd::Zero(0, mot2.cols());
-    // mot3 = Eigen::VectorXd::Zero(0, mot3.cols());
-    // mot4 = Eigen::VectorXd::Zero(0, mot4.cols());
-    // mot5 = Eigen::VectorXd::Zero(0, mot5.cols());
-    // mot6 = Eigen::VectorXd::Zero(0, mot6.cols());
 
     // std::cout << "mot0.size() = " << mot0.size() << std::endl;
 
@@ -176,21 +168,12 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     // std::cout << "trqS" << std::endl
     //           << trqS << std::endl;
 
-    // Eigen::MatrixXd motS; // Declare a matrix to store the concatenated result
-
-    // // Concatenate the matrices vertically
-    // // motS = Eigen::MatrixXd::Zero(0, mot0.cols()); // Initialize an empty matrix to match the dimensions of mot0
-    // motS.conservativeResize(mot0.cols() + mot1.cols() + mot2.cols() + mot3.cols() + mot4.cols() + mot5.cols() + mot6.cols(), mot0.rows());
-
-    // std::cout << "motS.size() = " << motS.size() << std::endl;
-    // std::cout << "motS.rows() = " << motS.rows() << std::endl;
-    // std::cout << "motS.cols() = " << motS.cols() << std::endl;
-
     // Eigen::Matrix<double, 1, Eigen::Dynamic> v2(25);
 
     // Eigen::VectorXd v1(25);
     // v1 << 1, 0, 0, 0, 3, 4, 5, 6, 7, 8, 9, 2, 4, 5, 1, 3, 4, 5, 6, 7, 1, 4, 5, 3, 4;
 
+    // Declare the motS matrices vertically
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> motS(7, 25);
 
     motS.row(0) = mot0.transpose();
@@ -201,6 +184,10 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     motS.row(5) = mot5.transpose();
     motS.row(6) = mot6.transpose();
 
+    // std::cout << "motS.size() = " << motS.size() << std::endl;
+    // std::cout << "motS.rows() = " << motS.rows() << std::endl;
+    // std::cout << "motS.cols() = " << motS.cols() << std::endl;
+
     // std::cout << "motS" << std::endl
     //           << motS << std::endl;
 
@@ -209,100 +196,24 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     // std::cout << "motS_pinv" << std::endl
     //           << motS_pinv << std::endl;
 
+    // Vector parameters calculation
     Eigen::MatrixXd param = motS_pinv * trqS;
     // std::cout << "param" << std::endl
     //           << param << std::endl;
 
+    // Calculate trqT (Estimated gravity torque)
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> trqT(7, 1);
 
     trqT = motS * param;
     std::cout << "trqT" << std::endl
               << trqT << std::endl;
 
+    // Split trqT in
+    // trqT6 = ...to est_torque_array based on the division
     for (int i = 0; i < JOINT_NUM; i++)
     {
         est_torque_array[i] = trqT(i);
     }
-
-    std::cout << "est_torque_array" << std::endl
-              << est_torque_array << std::endl;
-
-    // // std::cout << "motS.size() = " << motS.size() << std::endl;
-
-    // Eigen::MatrixXd motS;
-
-    // motS = Eigen::MatrixXd::Zero(0, mot0.cols()); // Initialize an empty matrix to match the dimensions of mot0
-
-    // // Calculate para
-    // Eigen::MatrixXd motS_matrix(motS.size(), 7);
-    // Eigen::MatrixXd trqS_matrix(trqS.size(), 7);
-
-    // // std::cout << "mot0.size() = " << mot0.size() << std::endl;
-    // // std::cout << "mot1.size() = " << mot1.size() << std::endl;
-    // // std::cout << "mot2.size() = " << mot2.size() << std::endl;
-    // // std::cout << "mot3.size() = " << mot3.size() << std::endl;
-    // // std::cout << "mot4.size() = " << mot4.size() << std::endl;
-    // // std::cout << "mot5.size() = " << mot5.size() << std::endl;
-    // // std::cout << "mot6.size() = " << mot6.size() << std::endl;
-    // // std::cout << "motS.size() = " << motS.size() << std::endl;
-    // // std::cout << "trqS.size() = " << trqS.size() << std::endl;
-
-    // // for (int i = 0; i < motS.size(); ++i)
-    // // {
-    // //     std::cout << "motS[" << i << "] = " << motS[i] << std::endl;
-    // // }
-
-    // for (int i = 0; i < motS.size(); i++)
-    // {
-    //     motS_matrix(i, 0) = motS[i];
-    // }
-
-    // for (int i = 0; i < trqS.size(); i++)
-    // {
-    //     trqS_matrix(i, 0) = trqS[i];
-    // }
-
-    // std::cout << "motS_matrix.size() = " << motS_matrix.size() << std::endl;
-    // std::cout << "motS_matrix.rows() = " << motS_matrix.rows() << std::endl;
-    // std::cout << "motS_matrix.cols() = " << motS_matrix.cols() << std::endl;
-
-    // // Create Pseudo Inverse of motS_matrix
-    // // Eigen::MatrixXd para_matrix = motS_matrix.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(trqS_matrix);
-    // Eigen::MatrixXd motS_pinv = motS_matrix.completeOrthogonalDecomposition().pseudoInverse();
-
-    // std::cout << "motS_pinv.size() = " << motS_pinv.size() << std::endl;
-    // std::cout << "motS_pinv.rows() = " << motS_pinv.rows() << std::endl;
-    // std::cout << "motS_pinv.cols() = " << motS_pinv.cols() << std::endl;
-
-    // Eigen::MatrixXd para_matrix =  motS_pinv * trqS_matrix;
-
-    // Convert para_matrix to a vector
-    // std::vector<double> para(para_matrix.data(), para_matrix.data() + para_matrix.size());
-
-    // std::cout << "para.size() = " << para.size() << std::endl;
-
-    // for (int i = 0; i < para.size(); ++i)
-    // {
-    //     std::cout << "para[" << i << "] = " << para[i] << std::endl;
-    // }
-
-    // // Calculate trqT
-    // Eigen::MatrixXd para_matrix_reversed = para_matrix.transpose();
-    // Eigen::MatrixXd motS_matrix_reversed = motS_matrix.transpose();
-    // Eigen::MatrixXd trqT_matrix = motS_matrix_reversed * para_matrix_reversed;
-    // std::vector<double> trqT = std::vector<double>(trqT_matrix.data(), trqT_matrix.data() + trqT_matrix.rows() * trqT_matrix.cols());
-
-    // std::cout << "param = " << para_matrix_reversed << std::endl;
-
-    // Split trqT into trqT0, trqT1, trqT2, trqT3, trqT4, trqT5, and trqT6 based on the division
-
-    // trqT0 = ...
-    // trqT1 = ...
-    // trqT2 = ...
-    // trqT3 = ...
-    // trqT4 = ...
-    // trqT5 = ...
-    // trqT6 = ...
 
     return 0;
 }
