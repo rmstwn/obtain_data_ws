@@ -39,10 +39,14 @@ ament_target_dependencies(publish PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 # add_executable(dynamics src/dynamics.cpp)
 # ament_target_dependencies(dynamics PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
+add_executable(dynamics_test src/dynamics_test.cpp)
+ament_target_dependencies(dynamics_test PUBLIC ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
 install(TARGETS
   obtain
   publish
   # dynamics
+  dynamics_test
   DESTINATION lib/${PROJECT_NAME}
 )
 

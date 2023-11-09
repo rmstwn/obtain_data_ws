@@ -147,6 +147,7 @@ int main(int argc, char *argv[])
         // usleep(50000);
         setCranex7Angle(th_run);
         // getCranex7JointState(present_position, present_velocity, present_torque);
+        getCranex7Velocity(present_velocity);
         getCranex7Torque(present_torque);
 
         auto end = std::chrono::high_resolution_clock::now();
@@ -162,6 +163,13 @@ int main(int argc, char *argv[])
              << th[4][j] * (M_PI / 180) << ","
              << th[5][j] * (M_PI / 180) << ","
              << th[6][j] * (M_PI / 180) << ","
+             << (double)present_velocity[0] << ","
+             << (double)present_velocity[1] << ","
+             << (double)present_velocity[2] << ","
+             << (double)present_velocity[3] << ","
+             << (double)present_velocity[4] << ","
+             << (double)present_velocity[5] << ","
+             << (double)present_velocity[6] << ","
              << (double)present_torque[0] << ","
              << (double)present_torque[1] << ","
              << (double)present_torque[2] << ","

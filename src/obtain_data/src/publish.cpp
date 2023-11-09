@@ -234,9 +234,11 @@ private:
                 est_joint_pub_->publish(std::move(est_joint_msg));
 
                 // usleep(1000);
+                //usleep(100000);
             }
 
             safe_start(20);
+            
 
             Initflag = 1;
         }

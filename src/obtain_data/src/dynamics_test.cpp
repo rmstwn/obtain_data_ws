@@ -20,56 +20,68 @@
  * @return Success or failure.
  */
 
-int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *torque_array, double *est_torque_array)
+int main()
 {
     // Define th0 to th7 and omg0 to omg7 as double
-    double th0 = angle_array[0];
-    double th1 = angle_array[1];
-    double th2 = angle_array[2];
-    double th3 = angle_array[3];
-    double th4 = angle_array[4];
-    double th5 = angle_array[5];
-    double th6 = angle_array[6];
+    // double th0 = 0.7741;
+    // double th1 = 0.1530;
+    // double th2 = 1.2308;
+    // double th3 = -0.0543;
+    // double th4 = -0.0747;
+    // double th5 = 0.1403;
+    // double th6 = 0.5819;
 
-    // std::cout << "th " << th0 << " " << th1 << " " << th2 << " " << th3 << " " << th4 << " " << th5 << " " << th6 << std::endl;
+    // double omg0 = -0.1935;
+    // double omg1 = 0.0055;
+    // double omg2 = -0.7800;
+    // double omg3 = -0.4418;
+    // double omg4 = 0.2352;
+    // double omg5 = 0.1645;
+    // double omg6 = 0.8525;
 
-    double omg0 = vel_array[0];
-    double omg1 = vel_array[1];
-    double omg2 = vel_array[2];
-    double omg3 = vel_array[3];
-    double omg4 = vel_array[4];
-    double omg5 = vel_array[5];
-    double omg6 = vel_array[6];
+    // double trq0 = -0.0935;
+    // double trq1 = 1.4068;
+    // double trq2 = -0.1559;
+    // double trq3 = 0.8979;
+    // double trq4 = 0.0811;
+    // double trq5 = 0.5362;
+    // double trq6 = 0.0374;
 
-    // std::cout << "omg " << omg0 << " " << omg1 << " " << omg2 << " " << omg3 << " " << omg4 << " " << omg5 << " " << omg6 << std::endl;
+    double th0 = -0.670192;
+    double th1 = -0.0178416;
+    double th2 = 0.840471;
+    double th3 = 0.653604;
+    double th4 = 0.723583;
+    double th5 = 0.163549;
+    double th6 = 0.395575;
+    std::cout << "th " << th0 << " " << th1 << " " << th2 << " " << th3 << " " << th4 << " " << th5 << " " << th6 << std::endl;
 
-    double trq0 = torque_array[0];
-    double trq1 = torque_array[1];
-    double trq2 = torque_array[2];
-    double trq3 = torque_array[3];
-    double trq4 = torque_array[4];
-    double trq5 = torque_array[5];
-    double trq6 = torque_array[6];
+    double omg0 = 1.1271;
+    double omg1 = 0.143885;
+    double omg2 = 0.935252;
+    double omg3 = 0;
+    double omg4 = -0.335732;
+    double omg5 = -0.431655;
+    double omg6 = -0.383693;
+    std::cout << "omg " << omg0 << " " << omg1 << " " << omg2 << " " << omg3 << " " << omg4 << " " << omg5 << " " << omg6 << std::endl;
 
-    // std::cout << "trq " << trq0 << " " << trq1 << " " << trq2 << " " << trq3 << " " << trq4 << " " << trq5 << " " << trq6 << std::endl;
+    double trq0 = 0.0498812;
+    double trq1 = 0.454911;
+    double trq2 = -0.0374109;
+    double trq3 = 0.324228;
+    double trq4 = -0.0311758;
+    double trq5 = -0.392815;
+    double trq6 = -0.0249406;
+    std::cout << "trq " << trq0 << " " << trq1 << " " << trq2 << " " << trq3 << " " << trq4 << " " << trq5 << " " << trq6 << std::endl;
 
     // Assuming you have populated th0 to th6 and omg0 to omg6 variables
-    // Eigen::VectorXd mot0(25);
-    // Eigen::VectorXd mot1(25);
-    // Eigen::VectorXd mot2(25);
-    // Eigen::VectorXd mot3(25);
-    // Eigen::VectorXd mot4(25);
-    // Eigen::VectorXd mot5(25);
-    // Eigen::VectorXd mot6(25);
-
-    Eigen::VectorXd mot0 = Eigen::VectorXd::Zero(25);
-    Eigen::VectorXd mot1 = Eigen::VectorXd::Zero(25);
-    Eigen::VectorXd mot2 = Eigen::VectorXd::Zero(25);
-    Eigen::VectorXd mot3 = Eigen::VectorXd::Zero(25);
-    Eigen::VectorXd mot4 = Eigen::VectorXd::Zero(25);
-    Eigen::VectorXd mot5 = Eigen::VectorXd::Zero(25);
-    Eigen::VectorXd mot6 = Eigen::VectorXd::Zero(25);
-
+    Eigen::VectorXd mot0(25);
+    Eigen::VectorXd mot1(25);
+    Eigen::VectorXd mot2(25);
+    Eigen::VectorXd mot3(25);
+    Eigen::VectorXd mot4(25);
+    Eigen::VectorXd mot5(25);
+    Eigen::VectorXd mot6(25);
     // std::vector<double> mot7(26, 0.0);
 
     // std::cout << "mot0.size() = " << mot0.size() << std::endl;
@@ -80,10 +92,10 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     mot0[14] = 1.0;                                                  // Positive constant 1 (Note: MATLAB index 15 corresponds to C++ index 14)
 
     // Print the values of mot0 for verification
-    // for (int i = 0; i < mot0.size(); ++i)
-    // {
-    //     std::cout << "mot0[" << i << "] = " << mot0[i] << std::endl;
-    // }
+    for (int i = 0; i < mot0.size(); ++i)
+    {
+        std::cout << "mot0[" << i << "] = " << mot0[i] << std::endl;
+    }
 
     // Assign values to mot1
     mot1[2] = std::copysign(1.0, omg1);                                                                                                                                                                                                                                                                        // 1st axis friction term 3 Vel 2
@@ -175,8 +187,8 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     trqS.row(5) << trq5;
     trqS.row(6) << trq6;
 
-    // std::cout << "trqS" << std::endl
-    //           << trqS << std::endl;
+    std::cout << "trqS" << std::endl
+              << trqS << std::endl;
 
     // Eigen::Matrix<double, 1, Eigen::Dynamic> v2(25);
 
@@ -185,6 +197,14 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
 
     // Declare the motS matrices vertically
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> motS(7, 25);
+
+    // motS.row(0) << mot0.transpose();
+    // motS.row(1) << mot1.transpose();
+    // motS.row(2) << mot2.transpose();
+    // motS.row(3) << mot3.transpose();
+    // motS.row(4) << mot4.transpose();
+    // motS.row(5) << mot5.transpose();
+    // motS.row(6) << mot6.transpose();
 
     motS.row(0) << mot0.transpose();
     motS.row(1) << mot1.transpose();
@@ -198,8 +218,8 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     // std::cout << "motS.rows() = " << motS.rows() << std::endl;
     // std::cout << "motS.cols() = " << motS.cols() << std::endl;
 
-    // std::cout << "motS" << std::endl
-    //           << motS << std::endl;
+    std::cout << "motS" << std::endl
+              << motS << std::endl;
 
     // Create Pseudo Inverse of motS_matrix
     Eigen::MatrixXd motS_pinv = motS.completeOrthogonalDecomposition().pseudoInverse();
@@ -295,19 +315,15 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> trqT(7, 1);
 
     trqT = motS * param;
-
-    // std::cout << "trqT" << std::endl
-    //           << trqT << std::endl;
+    std::cout << "trqT" << std::endl
+              << trqT << std::endl;
 
     // Split trqT in
     // trqT6 = ...to est_torque_array based on the division
-    for (int i = 0; i < 7; i++)
-    {
-        est_torque_array[i] = trqT(i);
-    }
-
-    motS = Eigen::MatrixXd::Zero(7, 25);
-    trqT = Eigen::MatrixXd::Zero(7, 1);
+    // for (int i = 0; i < 7; i++)
+    // {
+    //     est_torque_array[i] = trqT(i);
+    // }
 
     return 0;
 }
