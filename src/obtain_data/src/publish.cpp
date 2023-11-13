@@ -7,6 +7,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 #include <rclcpp/client.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/publisher.hpp>
@@ -94,6 +95,7 @@ private:
     double present_angvel[JOINT_NUM] = {0};
     double present_torque[JOINT_NUM] = {0};
     double estimated_torque[JOINT_NUM] = {0};
+    double error_torque[JOINT_NUM] = {0};
 
     void timer_callback()
     {
@@ -183,14 +185,33 @@ private:
 
                 // std::cout << j << " " << th_run[0] << " " << th_run[1] << " " << th_run[2] << " " << th_run[3] << " " << th_run[4] << " " << th_run[5] << " " << th_run[6] << " " << th_run[7] << std::endl;
                 // std::cout << j << " " << present_angvel[0] << " " << present_angvel[1] << " " << present_angvel[2] << " " << present_angvel[3] << " " << present_angvel[4] << " " << present_angvel[5] << " " << present_angvel[6] << " " << present_angvel[7] << std::endl;
-                std::cout << "Feedback " << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
+                // std::cout << "Feedback || " << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
 
                 getCranex7EstimatedTorque(th_rad, present_angvel, present_torque, estimated_torque);
 
                 // std::cout << j << " " << present_theta[0] << " " << present_theta[1] << " " << present_theta[2] << " " << present_theta[3] << " " << present_theta[4] << " " << present_theta[5] << " " << present_theta[6] << " " << present_theta[7] << std::endl;
                 // std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
 
-                std::cout << "Estimated " << j << " " << estimated_torque[0] << " " << estimated_torque[1] << " " << estimated_torque[2] << " " << estimated_torque[3] << " " << estimated_torque[4] << " " << estimated_torque[5] << " " << estimated_torque[6] << " " << estimated_torque[7] << std::endl;
+                // std::cout << "Estimated || " << j << " " << estimated_torque[0] << " " << estimated_torque[1] << " " << estimated_torque[2] << " " << estimated_torque[3] << " " << estimated_torque[4] << " " << estimated_torque[5] << " " << estimated_torque[6] << " " << estimated_torque[7] << std::endl;
+
+                // Calculate Joint torque error between estimated and real
+                for (int i = 0; i < 7; i++)
+                {
+                    error_torque[i] = abs(estimated_torque[i] - present_torque[i]);
+                }
+
+                std::cout << "Error || " << j << " " << error_torque[0] << " " << error_torque[1] << " " << error_torque[2] << " " << error_torque[3] << " " << error_torque[4] << " " << error_torque[5] << " " << error_torque[6] << " " << error_torque[7] << std::endl;
+
+                // if (error_torque[0] >= 1.00 || error_torque[1] >= 1.00 || error_torque[2] >= 1.00 || error_torque[3] >= 1.00 || error_torque[4] >= 1.00 || error_torque[5] >= 1.00 || error_torque[6] >= 1.00 || error_torque[7] >= 1.00)
+                // {
+                //     break;
+                // }
+                if (*std::max_element(error_torque, error_torque + 8) >= 1.00)
+                {
+                    // Break if any element is greater than or equal to 1.00
+                    std::cout << "Collision!!!!!!" << std::endl;
+                    break;
+                }
 
                 // Create the messages we might publish Joint state data
                 auto joint_msg = std::make_unique<sensor_msgs::msg::JointState>();
@@ -234,20 +255,20 @@ private:
                 est_joint_pub_->publish(std::move(est_joint_msg));
 
                 // usleep(1000);
-                //usleep(100000);
+                // usleep(100000);
             }
 
-            safe_start(20);
-            
+            //safe_start(20);
 
             Initflag = 1;
+            closeCranex7Port();
         }
     }
 };
 
 int main(int argc, char *argv[])
 {
-    // rclcpp::init(argc, argv);
+    // rclcpp::init(argc, argv);    
 
     // // Create a multi-threaded executor
     // rclcpp::executors::MultiThreadedExecutor executor;
