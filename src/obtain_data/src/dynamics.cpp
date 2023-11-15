@@ -11,7 +11,7 @@
 #include "obtain_data/dynamics.hpp"
 
 /**
- * @fn int getCranex7EstimatedTorque(double *)
+ * @fn int getCranex7EstimatedTorque(double *, double *, double *, double *)
  * @brief Function to get joint torque estimation
  * @param[in] angle_array[] input angle array
  * @param[in] vel_array[] input feedback velocity array
@@ -19,7 +19,6 @@
  * @param[out] est_torque_array[] output estimated torque array
  * @return Success or failure.
  */
-
 int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *torque_array, double *est_torque_array)
 {
     // Define th0 to th7 and omg0 to omg7 as double
@@ -311,3 +310,197 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
 
     return 0;
 }
+
+/**
+ * @fn int getCranex7EstimatedExtForces(double *)
+ * @brief Function to get external force estimation from error torque
+ * @param[in] err_torque_array[] input error torque array
+ * @param[out] est_force_array[] output estimated force array
+ * @return Success or failure.
+ */
+/*
+int getCranex7EstimatedExtForces(double *)
+{
+    // Homogeneous Transformation Matrix
+    Eigen::MatrixXd H0_0(4, 4);
+    Eigen::MatrixXd H0_1(4, 4);
+    Eigen::MatrixXd H1_2(4, 4);
+    Eigen::MatrixXd H2_3(4, 4);
+    Eigen::MatrixXd H3_4(4, 4);
+    Eigen::MatrixXd H4_5(4, 4);
+    Eigen::MatrixXd H5_6(4, 4);
+
+    H0_0 << 1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1;
+
+    H0_1 << cos(theta[0]), sin(theta[0]), 0, 0,
+        sin(theta[0]), -cos(theta[0]), 0, 0,
+        0, 0, 1, link[0],
+        0, 0, 0, 1;
+
+    H1_2 << cos(theta[1]), sin(theta[1]), 0, 0,
+        sin(theta[1]), -cos(theta[1]), 0, 0,
+        0, 0, 1, link[1],
+        0, 0, 0, 1;
+
+    H2_3 << cos(theta[2]), sin(theta[2]), 0, 0,
+        sin(theta[2]), -cos(theta[2]), 0, 0,
+        0, 0, 1, link[2],
+        0, 0, 0, 1;
+
+    H3_4 << cos(theta[3]), sin(theta[3]), 0, 0,
+        sin(theta[3]), -cos(theta[3]), 0, 0,
+        0, 0, 1, link[3],
+        0, 0, 0, 1;
+
+    H4_5 << cos(theta[4]), sin(theta[4]), 0, 0,
+        sin(theta[4]), -cos(theta[4]), 0, 0,
+        0, 0, 1, link[4],
+        0, 0, 0, 1;
+
+    H5_6 << cos(theta[5]), sin(theta[5]), 0, 0,
+        sin(theta[5]), -cos(theta[5]), 0, 0,
+        0, 0, 1, link[5],
+        0, 0, 0, 1;
+
+    Eigen::MatrixXd H0_1(4, 4);
+    Eigen::MatrixXd H0_2(4, 4);
+    Eigen::MatrixXd H0_3(4, 4);
+    Eigen::MatrixXd H0_4(4, 4);
+    Eigen::MatrixXd H0_5(4, 4);
+    Eigen::MatrixXd H0_6(4, 4);
+
+    H0_1 = H0_0 * H0_1;
+    H0_2 = H0_0 * H0_1 * H1_2;
+    H0_3 = H0_0 * H0_1 * H1_2 * H2_3;
+    H0_4 = H0_0 * H0_1 * H1_2 * H2_3 * H3_4;
+    H0_5 = H0_0 * H0_1 * H1_2 * H2_3 * H3_4 * H4_5;
+    H0_6 = H0_0 * H0_1 * H1_2 * H2_3 * H3_4 * H4_5 * H5_6;
+
+    // Create the Displacement Matrix for Jacobian Matrix
+    Eigen::MatrixXd d0_0(3, 1);
+    Eigen::MatrixXd d0_1(3, 1);
+    Eigen::MatrixXd d0_2(3, 1);
+    Eigen::MatrixXd d0_3(3, 1);
+    Eigen::MatrixXd d0_4(3, 1);
+    Eigen::MatrixXd d0_5(3, 1);
+    Eigen::MatrixXd d0_6(3, 1);
+
+    d0_0 << H0_0(0, 3),
+        H0_0(1, 3),
+        H0_0(2, 3);
+
+    d0_1 << H0_1(0, 3),
+        H0_1(1, 3),
+        H0_1(2, 3);
+
+    d0_2 << H0_2(0, 3),
+        H0_2(1, 3),
+        H0_2(2, 3);
+
+    d0_3 << H0_3(0, 3),
+        H0_3(1, 3),
+        H0_3(2, 3);
+
+    d0_4 << H0_4(0, 3),
+        H0_4(1, 3),
+        H0_4(2, 3);
+
+    d0_5 << H0_5(0, 3),
+        H0_5(1, 3),
+        H0_5(2, 3);
+
+    d0_6 << H0_6(0, 3),
+        H0_6(1, 3),
+        H0_6(2, 3);
+
+    Eigen::MatrixXd Jd0_0(3, 1);
+    Eigen::MatrixXd Jd0_1(3, 1);
+    Eigen::MatrixXd Jd0_2(3, 1);
+    Eigen::MatrixXd Jd0_3(3, 1);
+    Eigen::MatrixXd Jd0_4(3, 1);
+    Eigen::MatrixXd Jd0_5(3, 1);
+    Eigen::MatrixXd Jd0_6(3, 1);
+
+    Jd0_0 = d0_6 - d0_0;
+    Jd0_1 = d0_6 - d0_1;
+    Jd0_2 = d0_6 - d0_2;
+    Jd0_3 = d0_6 - d0_3;
+    Jd0_4 = d0_6 - d0_4;
+    Jd0_5 = d0_6 - d0_5;
+
+    // Create the Rotation Matrix for Jacobian Matrix
+    Eigen::MatrixXd JR0_0(3, 1);
+    Eigen::MatrixXd JR0_1(3, 1);
+    Eigen::MatrixXd JR0_2(3, 1);
+    Eigen::MatrixXd JR0_3(3, 1);
+    Eigen::MatrixXd JR0_4(3, 1);
+    Eigen::MatrixXd JR0_5(3, 1);
+    Eigen::MatrixXd JR0_6(3, 1);
+
+    JR0_0 << H0_0(0, 2),
+        H0_0(1, 2),
+        H0_0(2, 2);
+
+    JR0_1 << H0_1(0, 2),
+        H0_1(1, 2),
+        H0_1(2, 2);
+
+    JR0_2 << H0_2(0, 2),
+        H0_2(1, 2),
+        H0_2(2, 2);
+
+    JR0_3 << H0_3(0, 2),
+        H0_3(1, 2),
+        H0_3(2, 2);
+
+    JR0_4 << H0_4(0, 2),
+        H0_4(1, 2),
+        H0_4(2, 2);
+
+    JR0_5 << H0_5(0, 2),
+        H0_5(1, 2),
+        H0_5(2, 2);
+
+    JR0_6 << H0_6(0, 2),
+        H0_6(1, 2),
+        H0_6(2, 2);
+
+    // Cross Product
+    Eigen::Vector3d JR0_0_cross(JR0_0(0, 0), JR0_0(1, 0), JR0_0(2, 0));
+    Eigen::Vector3d JR0_1_cross(JR0_1(0, 0), JR0_1(1, 0), JR0_1(2, 0));
+    Eigen::Vector3d JR0_2_cross(JR0_2(0, 0), JR0_2(1, 0), JR0_2(2, 0));
+    Eigen::Vector3d JR0_3_cross(JR0_3(0, 0), JR0_3(1, 0), JR0_3(2, 0));
+    Eigen::Vector3d JR0_4_cross(JR0_4(0, 0), JR0_4(1, 0), JR0_4(2, 0));
+    Eigen::Vector3d JR0_5_cross(JR0_5(0, 0), JR0_5(1, 0), JR0_5(2, 0));
+
+    Eigen::Vector3d Jd0_0_cross(Jd0_0(0, 0), Jd0_0(1, 0), Jd0_0(2, 0));
+    Eigen::Vector3d Jd0_1_cross(Jd0_1(0, 0), Jd0_1(1, 0), Jd0_1(2, 0));
+    Eigen::Vector3d Jd0_2_cross(Jd0_2(0, 0), Jd0_2(1, 0), Jd0_2(2, 0));
+    Eigen::Vector3d Jd0_3_cross(Jd0_3(0, 0), Jd0_3(1, 0), Jd0_3(2, 0));
+    Eigen::Vector3d Jd0_4_cross(Jd0_4(0, 0), Jd0_4(1, 0), Jd0_4(2, 0));
+    Eigen::Vector3d Jd0_5_cross(Jd0_5(0, 0), Jd0_5(1, 0), Jd0_5(2, 0));
+
+    Eigen::Vector3d J0 = JR0_0_cross.cross(Jd0_0_cross);
+    Eigen::Vector3d J1 = JR0_1_cross.cross(Jd0_1_cross);
+    Eigen::Vector3d J2 = JR0_2_cross.cross(Jd0_2_cross);
+    Eigen::Vector3d J3 = JR0_3_cross.cross(Jd0_3_cross);
+    Eigen::Vector3d J4 = JR0_4_cross.cross(Jd0_4_cross);
+    Eigen::Vector3d J5 = JR0_5_cross.cross(Jd0_5_cross);
+
+    // Jacobian matrix
+    Eigen::MatrixXd J7DOF(6, 6);
+    J7DOF << J0(0, 0), J1(0, 0), J2(0, 0), J3(0, 0), J4(0, 0), J5(0, 0),
+        J0(1, 0), J1(1, 0), J2(1, 0), J3(1, 0), J4(1, 0), J5(1, 0),
+        J0(2, 0), J1(2, 0), J2(2, 0), J3(2, 0), J4(2, 0), J5(2, 0),
+        JR0_0(0, 0), JR0_1(0, 0), JR0_2(0, 0), JR0_3(0, 0), JR0_4(0, 0), JR0_5(0, 0),
+        JR0_0(1, 0), JR0_1(1, 0), JR0_2(1, 0), JR0_3(1, 0), JR0_4(1, 0), JR0_5(1, 0),
+        JR0_0(2, 0), JR0_1(2, 0), JR0_2(2, 0), JR0_3(2, 0), JR0_4(2, 0), JR0_5(2, 0);
+    ;
+
+    // Create Pseudo Inverse of Jacobian matrix
+    Eigen::MatrixXd J7DOF_PseudoInv = J7DOF.completeOrthogonalDecomposition().pseudoInverse();
+}
+*/
