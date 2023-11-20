@@ -47,6 +47,7 @@ int main()
     // double trq5 = 0.5362;
     // double trq6 = 0.0374;
 
+    /*
     double th0 = -0.670192;
     double th1 = -0.0178416;
     double th2 = 0.840471;
@@ -317,6 +318,8 @@ int main()
     trqT = motS * param;
     std::cout << "trqT" << std::endl
               << trqT << std::endl;
+
+    */
 
     // Split trqT in
     // trqT6 = ...to est_torque_array based on the division

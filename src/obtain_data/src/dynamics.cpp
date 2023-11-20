@@ -324,7 +324,7 @@ int getCranex7EstimatedExtForces(double *angle_array, double *err_torque_array, 
     // Link array declaration
     Eigen::VectorXd link(7);
 
-    link << 0, 0, 0, 0, 0, 0, 0, 0;
+    link << 41, 105, 170, 355, 476, 605, 624;
 
     // Homogeneous Transformation Matrix
     Eigen::MatrixXd H0_0(4, 4);
@@ -512,5 +512,18 @@ int getCranex7EstimatedExtForces(double *angle_array, double *err_torque_array, 
 
     // Create Transpose of Pseudo Inverse of Jacobian matrix
     Eigen::MatrixXd J7DOF_PseudoInvT = J7DOF_PseudoInv.transpose();
-    
+
+    Eigen::VectorXd ForceMoment(6);
+    Eigen::VectorXd ErrTorque(6);
+
+    ErrTorque(0) = err_torque_array[0];
+    ErrTorque(1) = err_torque_array[1];
+    ErrTorque(2) = err_torque_array[2];
+    ErrTorque(3) = err_torque_array[3];
+    ErrTorque(4) = err_torque_array[4];
+    ErrTorque(5) = err_torque_array[5];
+
+    ForceMoment = J7DOF_PseudoInvT * ErrTorque;
+
+    std::cout << ForceMoment(0) << ForceMoment(1) << ForceMoment(2) << ForceMoment(3) << ForceMoment(4) << ForceMoment(5) << std::endl;
 }
