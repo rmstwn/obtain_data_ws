@@ -328,5 +328,9 @@ int main()
     //     est_torque_array[i] = trqT(i);
     // }
 
+
+    double err_torque(7);
+    double err_torque(7);
+
     return 0;
 }

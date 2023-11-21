@@ -24,8 +24,10 @@
 
 #include "obtain_data/dynamixel_node.hpp"
 #include "obtain_data/crane_x7_comm.hpp"
+#include "obtain_data/dynamics.hpp"
 // #include "obtain_data/globals.hpp"
 #include "crane_x7_comm.cpp"
+#include "dynamics.cpp"
 
 using namespace std;
 
@@ -52,6 +54,9 @@ double th_d[JOINT_NUM][MAX_DATA];
 double th_dd[JOINT_NUM][MAX_DATA];
 
 double th_run[JOINT_NUM];
+double th_rad[JOINT_NUM];
+
+double forces[6];
 
 // array<array<double, JOINT_NUM>, MAX_DATA> th;
 // array<array<double, JOINT_NUM>, MAX_DATA> th_d;
@@ -67,46 +72,48 @@ int main(int argc, char *argv[])
         return 0;
 
     // Feedback variables
-    double present_position[JOINT_NUM] = {0};
-    double present_velocity[JOINT_NUM] = {0};
+    double present_theta[JOINT_NUM] = {0};
+    double present_angvel[JOINT_NUM] = {0};
     double present_torque[JOINT_NUM] = {0};
+    double estimated_torque[JOINT_NUM] = {0};
+    double error_torque[JOINT_NUM - 1] = {0};
 
-    // Create log file
-    std::ofstream data;
-    data.open("data.csv");
+    // // Create log file
+    // std::ofstream data;
+    // data.open("data.csv");
 
-    // Parameters Signal
-    for (i = 0; i < 7; i++)
-    {
-        A_3[i] = (-A_1[i] * Fc_1[i] - A_2[i] * Fc_2[i]) / Fc_3[i];
-        // std::cout << A_3[i] << syd::endl;
-    }
+    // // Parameters Signal
+    // for (i = 0; i < 7; i++)
+    // {
+    //     A_3[i] = (-A_1[i] * Fc_1[i] - A_2[i] * Fc_2[i]) / Fc_3[i];
+    //     // std::cout << A_3[i] << syd::endl;
+    // }
 
-    t[0] = 0;
-    for (i = 1; i <= MAX_DATA; i++)
-    {
-        t[i] = t[i - 1] + 0.1;
-        // std::cout << t[i] << std::endl;
-    }
+    // t[0] = 0;
+    // for (i = 1; i <= MAX_DATA; i++)
+    // {
+    //     t[i] = t[i - 1] + 0.1;
+    //     // std::cout << t[i] << std::endl;
+    // }
 
-    // Generate wave
-    for (i = 0; i < 7; i++)
-    {
-        th[i][0] = 0;
-        th_d[i][0] = 0;
-        th_d[i][0] = 0;
-    }
+    // // Generate wave
+    // for (i = 0; i < 7; i++)
+    // {
+    //     th[i][0] = 0;
+    //     th_d[i][0] = 0;
+    //     th_d[i][0] = 0;
+    // }
 
-    for (j = 0; j < 7; j++)
-    {
-        for (i = 1; i <= MAX_DATA; i++)
-        {
-            th[j][i] = A_1[j] * sin_deg(2 * M_PI * Fc_1[j] * t[i]) + A_2[j] * sin_deg(2 * M_PI * Fc_2[j] * t[i]) + A_3[j] * sin_deg(2 * M_PI * Fc_3[j] * t[i]);
-            th_d[j][i] = A_1[j] * Fc_1[j] * cos_deg(2 * M_PI * Fc_1[j] * t[i]) + A_2[j] * Fc_2[j] * cos_deg(2 * M_PI * Fc_2[j] * t[i]) + A_3[j] * Fc_3[j] * cos_deg(2 * M_PI * Fc_3[j] * t[i]);
-            th_d[j][i] = -(A_1[j] * pow(Fc_1[j], 2) * sin_deg(2 * M_PI * Fc_1[j] * t[i]) + A_2[j] * pow(Fc_2[j], 2) * sin_deg(2 * M_PI * Fc_2[j] * t[i]) + A_3[j] * pow(Fc_3[j], 2) * sin_deg(2 * M_PI * Fc_3[j] * t[i]));
-            // std::cout << th[j][i] << std::endl;
-        }
-    }
+    // for (j = 0; j < 7; j++)
+    // {
+    //     for (i = 1; i <= MAX_DATA; i++)
+    //     {
+    //         th[j][i] = A_1[j] * sin_deg(2 * M_PI * Fc_1[j] * t[i]) + A_2[j] * sin_deg(2 * M_PI * Fc_2[j] * t[i]) + A_3[j] * sin_deg(2 * M_PI * Fc_3[j] * t[i]);
+    //         th_d[j][i] = A_1[j] * Fc_1[j] * cos_deg(2 * M_PI * Fc_1[j] * t[i]) + A_2[j] * Fc_2[j] * cos_deg(2 * M_PI * Fc_2[j] * t[i]) + A_3[j] * Fc_3[j] * cos_deg(2 * M_PI * Fc_3[j] * t[i]);
+    //         th_d[j][i] = -(A_1[j] * pow(Fc_1[j], 2) * sin_deg(2 * M_PI * Fc_1[j] * t[i]) + A_2[j] * pow(Fc_2[j], 2) * sin_deg(2 * M_PI * Fc_2[j] * t[i]) + A_3[j] * pow(Fc_3[j], 2) * sin_deg(2 * M_PI * Fc_3[j] * t[i]));
+    //         // std::cout << th[j][i] << std::endl;
+    //     }
+    // }
 
     // for (i = 1; i <= MAX_DATA; i++)
     // {
@@ -129,13 +136,20 @@ int main(int argc, char *argv[])
 
     // array<double, JOINT_NUM> th_run;
 
-    auto start = std::chrono::high_resolution_clock::now();
+    // auto start = std::chrono::high_resolution_clock::now();
 
     for (j = 0; j < MAX_DATA; j++)
     {
         for (i = 0; i < 7; i++)
         {
-            th_run[i] = th[i][j];
+            // th_run[i] = th[i][j];
+
+            if (i == 3)
+                th_run[i] = 57.5;
+            else
+                th_run[i] = 0;
+
+            th_rad[i] = th_run[i] * (M_PI / 180);
         }
         // memcpy(th_run, th[j], sizeof(th_run));
 
@@ -147,47 +161,65 @@ int main(int argc, char *argv[])
         // usleep(50000);
         setCranex7Angle(th_run);
         // getCranex7JointState(present_position, present_velocity, present_torque);
-        getCranex7Velocity(present_velocity);
+        getCranex7Velocity(present_angvel);
         getCranex7Torque(present_torque);
 
-        auto end = std::chrono::high_resolution_clock::now();
+        getCranex7EstimatedTorque(th_rad, present_angvel, present_torque, estimated_torque);
+        // std::cout << "Estimated Torque || " << j << " " << estimated_torque[0] << " " << estimated_torque[1] << " " << estimated_torque[2] << " " << estimated_torque[3] << " " << estimated_torque[4] << " " << estimated_torque[5] << " " << estimated_torque[6] << " " << estimated_torque[7] << std::endl;
 
-        double time_taken = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        time_taken *= 1e-9;
+        // Calculate Joint torque error between estimated and real for (int i = 0; i < 7; i++)
+        for (int i = 0; i < 7; i++)
+        {
+            error_torque[i] = abs(estimated_torque[i] - present_torque[i]);
+        }
 
-        data << time_taken << ","
-             << th[0][j] * (M_PI / 180) << ","
-             << th[1][j] * (M_PI / 180) << ","
-             << th[2][j] * (M_PI / 180) << ","
-             << th[3][j] * (M_PI / 180) << ","
-             << th[4][j] * (M_PI / 180) << ","
-             << th[5][j] * (M_PI / 180) << ","
-             << th[6][j] * (M_PI / 180) << ","
-             << (double)present_velocity[0] << ","
-             << (double)present_velocity[1] << ","
-             << (double)present_velocity[2] << ","
-             << (double)present_velocity[3] << ","
-             << (double)present_velocity[4] << ","
-             << (double)present_velocity[5] << ","
-             << (double)present_velocity[6] << ","
-             << (double)present_torque[0] << ","
-             << (double)present_torque[1] << ","
-             << (double)present_torque[2] << ","
-             << (double)present_torque[3] << ","
-             << (double)present_torque[4] << ","
-             << (double)present_torque[5] << ","
-             << (double)present_torque[6] << std::endl;
+        getCranex7EstimatedExtForces(th_rad, error_torque, forces);
+        std::cout << "Estimated forces || " << j << " " << forces[0] << " " << forces[1] << " " << forces[2] << " " << forces[3] << " " << forces[4] << " " << forces[5] << std::endl;
 
-        std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
-        //  std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
+        // auto end = std::chrono::high_resolution_clock::now();
 
-        usleep(1000);
+        // double time_taken = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+        // time_taken *= 1e-9;
+
+        // data << time_taken << ","
+        //      << th[0][j] * (M_PI / 180) << ","
+        //      << th[1][j] * (M_PI / 180) << ","
+        //      << th[2][j] * (M_PI / 180) << ","
+        //      << th[3][j] * (M_PI / 180) << ","
+        //      << th[4][j] * (M_PI / 180) << ","
+        //      << th[5][j] * (M_PI / 180) << ","
+        //      << th[6][j] * (M_PI / 180) << ","
+        //      << (double)present_angvel[0] << ","
+        //      << (double)present_angvel[1] << ","
+        //      << (double)present_angvel[2] << ","
+        //      << (double)present_angvel[3] << ","
+        //      << (double)present_angvel[4] << ","
+        //      << (double)present_angvel[5] << ","
+        //      << (double)present_angvel[6] << ","
+        //      << (double)present_torque[0] << ","
+        //      << (double)present_torque[1] << ","
+        //      << (double)present_torque[2] << ","
+        //      << (double)present_torque[3] << ","
+        //      << (double)present_torque[4] << ","
+        //      << (double)present_torque[5] << ","
+        //      << (double)present_torque[6] << std::endl;
+
+        // std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
+        // //  std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
+
+        // usleep(1000);
     }
 
-    data.close();
+    // data.close();
 
     safe_start(20);
     setCranex7TorqueState(TORQUE_DISABLE);
+
+    // double angles[7] = {0, 0, 0, 0, 0, 0, 0};
+    // double forces[6];
+
+    // getCranex7EstimatedExtForces(angles, error_torque, forces);
+    // std::cout << "Estimated forces || " << j << " " << forces[0] << " " << forces[1] << " " << forces[2] << " " << forces[3] << " " << forces[4] << " " << forces[5] << std::endl;
 
     return 0;
 }

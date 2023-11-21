@@ -63,7 +63,7 @@
 #define PI 3.14159265
 #endif
 
-#define MAX_DATA 50000
+#define MAX_DATA 5000000
 
 #define ESC_ASCII_VALUE 0x1b
 

@@ -153,7 +153,14 @@ private:
                 for (i = 0; i < 7; i++)
                 {
                     th_run[i] = th[i][j];
-                    th_rad[i] = th[i][j] * (M_PI / 180);
+                    th_rad[i] = th_run[i] * (M_PI / 180);
+
+                    // need to convert joint 4 57.5 to -57.5 to 0 115
+                    if (i == 3)
+                        th_run[i] = 57.5;
+                    else
+                        th_run[i] = 0;
+
                 }
 
                 // th_run[0] = 0
@@ -258,7 +265,7 @@ private:
                 // usleep(100000);
             }
 
-            //safe_start(20);
+            // safe_start(20);
 
             Initflag = 1;
             closeCranex7Port();
@@ -268,7 +275,7 @@ private:
 
 int main(int argc, char *argv[])
 {
-    // rclcpp::init(argc, argv);    
+    // rclcpp::init(argc, argv);
 
     // // Create a multi-threaded executor
     // rclcpp::executors::MultiThreadedExecutor executor;

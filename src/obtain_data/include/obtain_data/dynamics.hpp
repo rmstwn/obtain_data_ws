@@ -7,5 +7,7 @@
 
 
 int getCranex7EstimatedTorque(double *, double *, double *, double *);
+int getCranex7EstimatedExtForces(double *, double *, double *);
+
 
 #endif
