@@ -209,31 +209,31 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     // Eigen::MatrixXd param = motS_pinv * trqS;
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> param(25, 1);
 
-    param.row(0) << 0.0137;
-    param.row(1) << 0.0103;
-    param.row(2) << 0.0033;
-    param.row(3) << 0.7529;
-    param.row(4) << 0.0190;
-    param.row(5) << 0.0450;
-    param.row(6) << 0.0825;
-    param.row(7) << 0.2702;
-    param.row(8) << 0.0090;
-    param.row(9) << 0.0165;
-    param.row(10) << 0.1579;
-    param.row(11) << 0.2953;
-    param.row(12) << 0.0146;
-    param.row(13) << 0.0101;
-    param.row(14) << -0.0127;
-    param.row(15) << -0.1573;
-    param.row(16) << -0.0095;
-    param.row(17) << -0.1681;
-    param.row(18) << -0.0152;
-    param.row(19) << 0.0374;
-    param.row(20) << -0.0105;
-    param.row(21) << 2.5918;
-    param.row(22) << 1.2529;
-    param.row(23) << 0.7630;
-    param.row(24) << -0.1139;
+    // param.row(0) << 0.0137;
+    // param.row(1) << 0.0103;
+    // param.row(2) << 0.0033;
+    // param.row(3) << 0.7529;
+    // param.row(4) << 0.0190;
+    // param.row(5) << 0.0450;
+    // param.row(6) << 0.0825;
+    // param.row(7) << 0.2702;
+    // param.row(8) << 0.0090;
+    // param.row(9) << 0.0165;
+    // param.row(10) << 0.1579;
+    // param.row(11) << 0.2953;
+    // param.row(12) << 0.0146;
+    // param.row(13) << 0.0101;
+    // param.row(14) << -0.0127;
+    // param.row(15) << -0.1573;
+    // param.row(16) << -0.0095;
+    // param.row(17) << -0.1681;
+    // param.row(18) << -0.0152;
+    // param.row(19) << 0.0374;
+    // param.row(20) << -0.0105;
+    // param.row(21) << 2.5918;
+    // param.row(22) << 1.2529;
+    // param.row(23) << 0.7630;
+    // param.row(24) << -0.1139;
 
     // param.row(0) << 0.0266;
     // param.row(1) << 0.0373;
@@ -286,6 +286,32 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     // param.row(22) << 1.0153;
     // param.row(23) << 0.7370;
     // param.row(24) << -0.0314;
+
+    param.row(0) << 0.0156;
+    param.row(1) << -0.0101;
+    param.row(2) << 0.3447;
+    param.row(3) << -0.1063;
+    param.row(4) << 0.0466;
+    param.row(5) << 0.0019;
+    param.row(6) << 0.3531;
+    param.row(7) << -0.0747;
+    param.row(8) << 0.0160;
+    param.row(9) << 0.0011;
+    param.row(10) << 0.4605;
+    param.row(11) << -0.0513;
+    param.row(12) << 0.0109;
+    param.row(13) << 0.0064;
+    param.row(14) << -0.0022;
+    param.row(15) << -0.1126;
+    param.row(16) << -0.0101;
+    param.row(17) << -0.0317;
+    param.row(18) << -0.0030;
+    param.row(19) << 0.0243;
+    param.row(20) << 0.0024;
+    param.row(21) << 2.9188;
+    param.row(22) << -0.0051;
+    param.row(23) << 1.3449;
+    param.row(24) << 0.0123;
 
     // std::cout << "param" << std::endl
     //           << param << std::endl;
@@ -372,8 +398,8 @@ int getCranex7EstimatedExtForces(double *angle_array, double *err_torque_array, 
         0, 0, 1, link[6],
         0, 0, 0, 1;
 
-    H6_7 << cos(angle_array[5]), -sin(angle_array[5]), 0, 0,
-        sin(angle_array[5]), cos(angle_array[5]), 0, 0,
+    H6_7 << cos(angle_array[6]), -sin(angle_array[6]), 0, 0,
+        sin(angle_array[6]), cos(angle_array[6]), 0, 0,
         0, 0, 1, link[7],
         0, 0, 0, 1;
 

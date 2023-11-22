@@ -58,12 +58,6 @@ double th_rad[JOINT_NUM];
 
 double forces[6];
 
-// array<array<double, JOINT_NUM>, MAX_DATA> th;
-// array<array<double, JOINT_NUM>, MAX_DATA> th_d;
-// array<array<double, JOINT_NUM>, MAX_DATA> th_dd;
-
-// double th_run[JOINT_NUM];
-
 int main(int argc, char *argv[])
 {
     std::cout << "Press any key to start (or press q to quit)\n";
@@ -77,6 +71,8 @@ int main(int argc, char *argv[])
     double present_torque[JOINT_NUM] = {0};
     double estimated_torque[JOINT_NUM] = {0};
     double error_torque[JOINT_NUM - 1] = {0};
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // // Create log file
     // std::ofstream data;
@@ -123,6 +119,121 @@ int main(int argc, char *argv[])
     //     // std::cout << th[j][i] << std::endl;
     // }
 
+    // uint8_t operating_mode[JOINT_NUM] = {OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION};
+
+    // if (initilizeCranex7(operating_mode))
+    // {
+    //     return 1;
+    // }
+    // setCranex7TorqueState(TORQUE_ENABLE);
+    // // sleeps(5);
+
+    // safe_start(20);
+
+    // auto start = std::chrono::high_resolution_clock::now();
+
+    // for (j = 0; j < MAX_DATA; j++)
+    // {
+    //     for (i = 0; i < 7; i++)
+    //     {
+    //         // need to convert joint 4 57.5 to -57.5 to 0 115
+    //         if (i == 3)
+    //         {
+    //             th_run[i] = map_range(th[i][j], 57.5, -57.5, 0, -115);
+    //             th_rad[i] = th_run[i] * (M_PI / 180);
+    //         }
+    //         else
+    //         {
+    //             th_run[i] = th[i][j];
+    //             th_rad[i] = th_run[i] * (M_PI / 180);
+    //         }
+    //     }
+
+    //     // std::cout << j << " " << th_run[0] << " " << th_run[1] << " " << th_run[2] << " " << th_run[3] << " " << th_run[4] << " " << th_run[5] << " " << th_run[6] << " " << th_run[7] << std::endl;
+    //     std::cout << j << " " << th_run[3] << std::endl;
+
+    //     // usleep(50000);
+    //     setCranex7Angle(th_run);
+    //     // getCranex7JointState(present_position, present_velocity, present_torque);
+    //     getCranex7Velocity(present_angvel);
+    //     getCranex7Torque(present_torque);
+
+    //     // getCranex7EstimatedTorque(th_rad, present_angvel, present_torque, estimated_torque);
+    //     // std::cout << "Estimated Torque || " << j << " " << estimated_torque[0] << " " << estimated_torque[1] << " " << estimated_torque[2] << " " << estimated_torque[3] << " " << estimated_torque[4] << " " << estimated_torque[5] << " " << estimated_torque[6] << " " << estimated_torque[7] << std::endl;
+
+    //     // Calculate Joint torque error between estimated and real for (int i = 0; i < 7; i++)
+    //     // for (int i = 0; i < 7; i++)
+    //     // {
+    //     //     error_torque[i] = abs(estimated_torque[i] - present_torque[i]);
+    //     // }
+
+    //     // getCranex7EstimatedExtForces(th_rad, error_torque, forces);
+    //     // std::cout << "Estimated forces || " << j << " " << forces[0] << " " << forces[1] << " " << forces[2] << " " << forces[3] << " " << forces[4] << " " << forces[5] << std::endl;
+
+    //     auto end = std::chrono::high_resolution_clock::now();
+
+    //     double time_taken = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    //     time_taken *= 1e-9;
+
+    //     // data << time_taken << ","
+    //     //      << th[0][j] * (M_PI / 180) << ","
+    //     //      << th[1][j] * (M_PI / 180) << ","
+    //     //      << th[2][j] * (M_PI / 180) << ","
+    //     //      << map_range(th[3][j], 57.5, -57.5, 0, 115) * (M_PI / 180) << ","
+    //     //      << th[4][j] * (M_PI / 180) << ","
+    //     //      << th[5][j] * (M_PI / 180) << ","
+    //     //      << th[6][j] * (M_PI / 180) << ","
+    //     //      << (double)present_angvel[0] << ","
+    //     //      << (double)present_angvel[1] << ","
+    //     //      << (double)present_angvel[2] << ","
+    //     //      << (double)present_angvel[3] << ","
+    //     //      << (double)present_angvel[4] << ","
+    //     //      << (double)present_angvel[5] << ","
+    //     //      << (double)present_angvel[6] << ","
+    //     //      << (double)present_torque[0] << ","
+    //     //      << (double)present_torque[1] << ","
+    //     //      << (double)present_torque[2] << ","
+    //     //      << (double)present_torque[3] << ","
+    //     //      << (double)present_torque[4] << ","
+    //     //      << (double)present_torque[5] << ","
+    //     //      << (double)present_torque[6] << std::endl;
+
+    //     data << time_taken << ","
+    //          << th_rad[0] << ","
+    //          << th_rad[1] << ","
+    //          << th_rad[2] << ","
+    //          << th_rad[3] << ","
+    //          << th_rad[4] << ","
+    //          << th_rad[5] << ","
+    //          << th_rad[6] << ","
+    //          << (double)present_angvel[0] << ","
+    //          << (double)present_angvel[1] << ","
+    //          << (double)present_angvel[2] << ","
+    //          << (double)present_angvel[3] << ","
+    //          << (double)present_angvel[4] << ","
+    //          << (double)present_angvel[5] << ","
+    //          << (double)present_angvel[6] << ","
+    //          << (double)present_torque[0] << ","
+    //          << (double)present_torque[1] << ","
+    //          << (double)present_torque[2] << ","
+    //          << (double)present_torque[3] << ","
+    //          << (double)present_torque[4] << ","
+    //          << (double)present_torque[5] << ","
+    //          << (double)present_torque[6] << std::endl;
+
+    //     // std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
+    //     // //  std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
+
+    //     //usleep(1000);
+    // }
+
+    // data.close();
+
+    // safe_start(20);
+    // setCranex7TorqueState(TORQUE_DISABLE);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     uint8_t operating_mode[JOINT_NUM] = {OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION, OPERATING_MODE_POSITION};
 
     if (initilizeCranex7(operating_mode))
@@ -130,30 +241,16 @@ int main(int argc, char *argv[])
         return 1;
     }
     setCranex7TorqueState(TORQUE_ENABLE);
-    // sleeps(5);
 
     safe_start(20);
-
-    // array<double, JOINT_NUM> th_run;
-
-    // auto start = std::chrono::high_resolution_clock::now();
 
     for (j = 0; j < MAX_DATA; j++)
     {
         for (i = 0; i < 7; i++)
         {
-            // th_run[i] = th[i][j];
-
-            if (i == 3)
-                th_run[i] = 57.5;
-            else
-                th_run[i] = 0;
-
+            th_run[i] = 0;
             th_rad[i] = th_run[i] * (M_PI / 180);
         }
-        // memcpy(th_run, th[j], sizeof(th_run));
-
-        // array<double, JOINT_NUM> th_run = th[j];
 
         // std::cout << j << " " << th_run[0] << " " << th_run[1] << " " << th_run[2] << " " << th_run[3] << " " << th_run[4] << " " << th_run[5] << " " << th_run[6] << " " << th_run[7] << std::endl;
         // std::cout << j << " " << th_run[3] << std::endl;
@@ -167,7 +264,7 @@ int main(int argc, char *argv[])
         getCranex7EstimatedTorque(th_rad, present_angvel, present_torque, estimated_torque);
         // std::cout << "Estimated Torque || " << j << " " << estimated_torque[0] << " " << estimated_torque[1] << " " << estimated_torque[2] << " " << estimated_torque[3] << " " << estimated_torque[4] << " " << estimated_torque[5] << " " << estimated_torque[6] << " " << estimated_torque[7] << std::endl;
 
-        // Calculate Joint torque error between estimated and real for (int i = 0; i < 7; i++)
+        // Calculate Joint torque error between estimated and real
         for (int i = 0; i < 7; i++)
         {
             error_torque[i] = abs(estimated_torque[i] - present_torque[i]);
@@ -176,50 +273,14 @@ int main(int argc, char *argv[])
         getCranex7EstimatedExtForces(th_rad, error_torque, forces);
         std::cout << "Estimated forces || " << j << " " << forces[0] << " " << forces[1] << " " << forces[2] << " " << forces[3] << " " << forces[4] << " " << forces[5] << std::endl;
 
-        // auto end = std::chrono::high_resolution_clock::now();
-
-        // double time_taken = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-        // time_taken *= 1e-9;
-
-        // data << time_taken << ","
-        //      << th[0][j] * (M_PI / 180) << ","
-        //      << th[1][j] * (M_PI / 180) << ","
-        //      << th[2][j] * (M_PI / 180) << ","
-        //      << th[3][j] * (M_PI / 180) << ","
-        //      << th[4][j] * (M_PI / 180) << ","
-        //      << th[5][j] * (M_PI / 180) << ","
-        //      << th[6][j] * (M_PI / 180) << ","
-        //      << (double)present_angvel[0] << ","
-        //      << (double)present_angvel[1] << ","
-        //      << (double)present_angvel[2] << ","
-        //      << (double)present_angvel[3] << ","
-        //      << (double)present_angvel[4] << ","
-        //      << (double)present_angvel[5] << ","
-        //      << (double)present_angvel[6] << ","
-        //      << (double)present_torque[0] << ","
-        //      << (double)present_torque[1] << ","
-        //      << (double)present_torque[2] << ","
-        //      << (double)present_torque[3] << ","
-        //      << (double)present_torque[4] << ","
-        //      << (double)present_torque[5] << ","
-        //      << (double)present_torque[6] << std::endl;
-
         // std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
         // //  std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
 
         // usleep(1000);
     }
 
-    // data.close();
-
     safe_start(20);
     setCranex7TorqueState(TORQUE_DISABLE);
-
-    // double angles[7] = {0, 0, 0, 0, 0, 0, 0};
-    // double forces[6];
-
-    // getCranex7EstimatedExtForces(angles, error_torque, forces);
-    // std::cout << "Estimated forces || " << j << " " << forces[0] << " " << forces[1] << " " << forces[2] << " " << forces[3] << " " << forces[4] << " " << forces[5] << std::endl;
 
     return 0;
 }

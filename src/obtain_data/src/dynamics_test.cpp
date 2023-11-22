@@ -330,7 +330,6 @@ int main()
 
 
     double err_torque(7);
-    double err_torque(7);
-
+    
     return 0;
 }

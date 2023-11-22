@@ -152,15 +152,17 @@ private:
             {
                 for (i = 0; i < 7; i++)
                 {
-                    th_run[i] = th[i][j];
-                    th_rad[i] = th_run[i] * (M_PI / 180);
-
                     // need to convert joint 4 57.5 to -57.5 to 0 115
                     if (i == 3)
-                        th_run[i] = 57.5;
+                    {
+                        th_run[i] = map_range(th[i][j], 57.5, -57.5, 0, -115);
+                        th_rad[i] = th_run[i] * (M_PI / 180);
+                    }
                     else
-                        th_run[i] = 0;
-
+                    {
+                        th_run[i] = th[i][j];
+                        th_rad[i] = th_run[i] * (M_PI / 180);
+                    }
                 }
 
                 // th_run[0] = 0
@@ -213,7 +215,8 @@ private:
                 // {
                 //     break;
                 // }
-                if (*std::max_element(error_torque, error_torque + 8) >= 1.20)
+
+                if (*std::max_element(error_torque, error_torque + 8) >= 1.50)
                 {
                     // Break if any element is greater than or equal to 1.00
                     std::cout << "Collision!!!!!!" << std::endl;
