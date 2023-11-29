@@ -271,7 +271,9 @@ int main(int argc, char *argv[])
         }
 
         getCranex7EstimatedExtForces(th_rad, error_torque, forces);
-        std::cout << "Estimated forces || " << j << " " << forces[0] << " " << forces[1] << " " << forces[2] << " " << forces[3] << " " << forces[4] << " " << forces[5] << std::endl;
+        // std::cout << j << "Estimated forces || " << " " << forces[0] << " " << forces[1] << " " << forces[2] << " " << forces[3] << " " << forces[4] << " " << forces[5] << std::endl;
+        std::cout << j << " Estimated forces || "
+                  << " Fx : " << forces[0] << " || Fy : " << forces[1] << " || Fz : " << forces[2] << std::endl;
 
         // std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
         // //  std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;

@@ -341,11 +341,11 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
  * @fn int getCranex7EstimatedExtForces(double *)
  * @brief Function to get external force estimation from error torque
  * @param[in] angle_array[] input angle array
- * @param[in] err_torque_array[] input error torque array
+ * @param[in] torque_array[] input torque array
  * @param[out] est_force_array[] output estimated force array
  * @return Success or failure.
  */
-int getCranex7EstimatedExtForces(double *angle_array, double *err_torque_array, double *est_force_array)
+int getCranex7EstimatedExtForces(double *angle_array, double *torque_array, double *est_force_array)
 {
     // Link array declaration
     Eigen::VectorXd link(8);
@@ -517,6 +517,8 @@ int getCranex7EstimatedExtForces(double *angle_array, double *err_torque_array, 
         JH0_6(2, 2);
 
     // Cross Product
+    // std::cout << "Cross Product" << std::endl;
+
     Eigen::Vector3d JR0_0_cross(JR0_0(0, 0), JR0_0(1, 0), JR0_0(2, 0));
     Eigen::Vector3d JR0_1_cross(JR0_1(0, 0), JR0_1(1, 0), JR0_1(2, 0));
     Eigen::Vector3d JR0_2_cross(JR0_2(0, 0), JR0_2(1, 0), JR0_2(2, 0));
@@ -542,6 +544,8 @@ int getCranex7EstimatedExtForces(double *angle_array, double *err_torque_array, 
     Eigen::Vector3d J6 = JR0_6_cross.cross(Jd0_6_cross);
 
     // Jacobian matrix
+    // std::cout << "Jacobian matrix" << std::endl;
+
     Eigen::MatrixXd J7DOF(7, 6);
     J7DOF << J0(0, 0), J1(0, 0), J2(0, 0), J3(0, 0), J4(0, 0), J5(0, 0), J6(0, 0),
         J0(1, 0), J1(1, 0), J2(1, 0), J3(1, 0), J4(1, 0), J5(1, 0), J6(1, 0),
@@ -555,20 +559,26 @@ int getCranex7EstimatedExtForces(double *angle_array, double *err_torque_array, 
     //           << J7DOF << std::endl;
 
     // Create Pseudo Inverse of Jacobian matrix
-    Eigen::MatrixXd J7DOF_PseudoInv = J7DOF.completeOrthogonalDecomposition().pseudoInverse();
+    // std::cout << "Pseudo Inverse Jacobian matrix" << std::endl;
 
-    // Create Transpose of Pseudo Inverse of Jacobian matrix
-    Eigen::MatrixXd J7DOF_PseudoInvT = J7DOF_PseudoInv.transpose();
+    // Eigen::MatrixXd J7DOF_PseudoInv = J7DOF.completeOrthogonalDecomposition().pseudoInverse();
+    Eigen::MatrixXd J7DOF_PseudoInv = J7DOF.transpose() * (J7DOF * J7DOF.transpose()).inverse();
 
-    Eigen::VectorXd ForceMoment(6);
-    Eigen::VectorXd ErrTorque(6);
+    // std::cout << "J7DOF_PseudoInv" << std::endl
+    //           << J7DOF_PseudoInv << std::endl;
 
-    ErrTorque(0) = err_torque_array[0];
-    ErrTorque(1) = err_torque_array[1];
-    ErrTorque(2) = err_torque_array[2];
-    ErrTorque(3) = err_torque_array[3];
-    ErrTorque(4) = err_torque_array[4];
-    ErrTorque(5) = err_torque_array[5];
+    Eigen::VectorXd Torque(7);
+
+    Torque(0) = torque_array[0];
+    Torque(1) = torque_array[1];
+    Torque(2) = torque_array[2];
+    Torque(3) = torque_array[3];
+    Torque(4) = torque_array[4];
+    Torque(5) = torque_array[5];
+    Torque(6) = torque_array[6];
+
+    // std::cout << "Torque" << std::endl
+    //           << Torque << std::endl;
 
     // std::cout << "Before ForceMoment" << std::endl;
 
@@ -578,7 +588,10 @@ int getCranex7EstimatedExtForces(double *angle_array, double *err_torque_array, 
     // std::cout << "ErrTorque" << std::endl
     //           << ErrTorque << std::endl;
 
-    ForceMoment = J7DOF_PseudoInvT * ErrTorque;
+    // std::cout << "Force Moment" << std::endl;
+    Eigen::VectorXd ForceMoment = J7DOF_PseudoInv.transpose().completeOrthogonalDecomposition().solve(Torque);
+
+    // Eigen::VectorXd ForceMoment = J7DOF_PseudoInv.transpose() * Torque;
 
     for (int i = 0; i < 6; i++)
     {
