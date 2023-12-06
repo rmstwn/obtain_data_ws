@@ -351,7 +351,8 @@ int getCranex7EstimatedExtForces(double *angle_array, double *torque_array, doub
     Eigen::VectorXd link(8);
 
     // link << 41, 105, 170, 355, 476, 605, 624;
-    link << 41, 64, 65, 185, 121, 129, 19, 84;
+    // link << 41, 64, 65, 185, 121, 129, 19, 84;
+    link << 4.1, 6.4, 6.5, 18.5, 12.1, 12.9, 1.9, 8.4;
 
     // Homogeneous Transformation Matrix
     Eigen::MatrixXd H0_0(4, 4);
@@ -543,10 +544,16 @@ int getCranex7EstimatedExtForces(double *angle_array, double *torque_array, doub
     Eigen::Vector3d J5 = JR0_5_cross.cross(Jd0_5_cross);
     Eigen::Vector3d J6 = JR0_6_cross.cross(Jd0_6_cross);
 
+    std::cout << "J5" << std::endl
+              << J5 << std::endl;
+
+    //return 0;
+
     // Jacobian matrix
     // std::cout << "Jacobian matrix" << std::endl;
 
-    Eigen::MatrixXd J7DOF(7, 6);
+    Eigen::MatrixXd J7DOF(6, 7);
+
     J7DOF << J0(0, 0), J1(0, 0), J2(0, 0), J3(0, 0), J4(0, 0), J5(0, 0), J6(0, 0),
         J0(1, 0), J1(1, 0), J2(1, 0), J3(1, 0), J4(1, 0), J5(1, 0), J6(1, 0),
         J0(2, 0), J1(2, 0), J2(2, 0), J3(2, 0), J4(2, 0), J5(2, 0), J6(2, 0),
@@ -555,17 +562,38 @@ int getCranex7EstimatedExtForces(double *angle_array, double *torque_array, doub
         JR0_0(2, 0), JR0_1(2, 0), JR0_2(2, 0), JR0_3(2, 0), JR0_4(2, 0), JR0_5(2, 0), JR0_6(2, 0);
     ;
 
-    // std::cout << "J7DOF" << std::endl
-    //           << J7DOF << std::endl;
+    // J7DOF << J0(0, 0), J1(0, 0), J2(0, 0), J3(0, 0), J4(0, 0), J5(0, 0),
+    //     J0(1, 0), J1(1, 0), J2(1, 0), J3(1, 0), J4(1, 0), J5(1, 0),
+    //     J0(2, 0), J1(2, 0), J2(2, 0), J3(2, 0), J4(2, 0), J5(2, 0),
+    //     JR0_0(0, 0), JR0_1(0, 0), JR0_2(0, 0), JR0_3(0, 0), JR0_4(0, 0), JR0_5(0, 0),
+    //     JR0_0(1, 0), JR0_1(1, 0), JR0_2(1, 0), JR0_3(1, 0), JR0_4(1, 0), JR0_5(1, 0),
+    //     JR0_0(2, 0), JR0_1(2, 0), JR0_2(2, 0), JR0_3(2, 0), JR0_4(2, 0), JR0_5(2, 0);
+    ;
+
+    std::cout << "J7DOF.size() = " << J7DOF.size() << std::endl;
+    std::cout << "J7DOF.rows() = " << J7DOF.rows() << std::endl;
+    std::cout << "J7DOF.cols() = " << J7DOF.cols() << std::endl;
+
+    std::cout << "J7DOF" << std::endl
+              << J7DOF << std::endl;
 
     // Create Pseudo Inverse of Jacobian matrix
     // std::cout << "Pseudo Inverse Jacobian matrix" << std::endl;
 
-    // Eigen::MatrixXd J7DOF_PseudoInv = J7DOF.completeOrthogonalDecomposition().pseudoInverse();
-    Eigen::MatrixXd J7DOF_PseudoInv = J7DOF.transpose() * (J7DOF * J7DOF.transpose()).inverse();
+    Eigen::MatrixXd J7DOF_PseudoInv = J7DOF.completeOrthogonalDecomposition().pseudoInverse();
+    // Eigen::MatrixXd J7DOF_PseudoInv = J7DOF.transpose() * (J7DOF * J7DOF.transpose()).inverse();
 
-    // std::cout << "J7DOF_PseudoInv" << std::endl
-    //           << J7DOF_PseudoInv << std::endl;
+    std::cout << "The determinant of J7DOF * J7DOF.transpose() is " << (J7DOF * J7DOF.transpose()).determinant() << std::endl;
+
+    std::cout << "J7DOF_PseudoInv.size() = " << J7DOF_PseudoInv.size() << std::endl;
+    std::cout << "J7DOF_PseudoInv.rows() = " << J7DOF_PseudoInv.rows() << std::endl;
+    std::cout << "J7DOF_PseudoInv.cols() = " << J7DOF_PseudoInv.cols() << std::endl;
+
+    std::cout << "J7DOF_PseudoInv" << std::endl
+              << J7DOF_PseudoInv << std::endl;
+
+    // std::cout << " EoE Pos || "
+    //           << " Xeoe : " << JH0_7(0, 3) << " || Yeoe : " << JH0_7(1, 3) << " || Zeoe : " << JH0_7(2, 3) << std::endl;
 
     Eigen::VectorXd Torque(7);
 
@@ -589,8 +617,8 @@ int getCranex7EstimatedExtForces(double *angle_array, double *torque_array, doub
     //           << ErrTorque << std::endl;
 
     // std::cout << "Force Moment" << std::endl;
-    Eigen::VectorXd ForceMoment = J7DOF_PseudoInv.transpose().completeOrthogonalDecomposition().solve(Torque);
 
+    Eigen::VectorXd ForceMoment = J7DOF_PseudoInv.transpose().completeOrthogonalDecomposition().solve(Torque);
     // Eigen::VectorXd ForceMoment = J7DOF_PseudoInv.transpose() * Torque;
 
     for (int i = 0; i < 6; i++)
