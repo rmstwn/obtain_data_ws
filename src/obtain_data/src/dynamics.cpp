@@ -369,34 +369,34 @@ int getCranex7EstimatedExtForces(double *angle_array, double *torque_array, doub
         0, 0, 1, link[0],
         0, 0, 0, 1;
 
-    H0_1 << cos(angle_array[0]), sin(angle_array[0]), 0, 0,
-        sin(angle_array[0]), -cos(angle_array[0]), 0, 0,
+    H0_1 << cos(angle_array[0]), 0, sin(angle_array[0]), 0,
+        sin(angle_array[0]), 0, -cos(angle_array[0]), 0,
         0, 0, 1, link[1],
         0, 0, 0, 1;
 
-    H1_2 << cos(angle_array[1]), sin(angle_array[1]), 0, 0,
-        sin(angle_array[1]), -cos(angle_array[1]), 0, 0,
-        0, 0, 1, link[2],
+    H1_2 << cos(angle_array[1]), 0, -sin(angle_array[1]), link[2] * cos(angle_array[1]),
+        sin(angle_array[1]), 0, cos(angle_array[1]), link[2] * sin(angle_array[1]),
+        0, -1, 0, 0,
         0, 0, 0, 1;
 
-    H2_3 << cos(angle_array[2]), sin(angle_array[2]), 0, 0,
-        sin(angle_array[2]), -cos(angle_array[2]), 0, 0,
-        0, 0, 1, link[3],
+    H2_3 << cos(angle_array[2]), 0, sin(angle_array[2]), 0,
+        sin(angle_array[2]), 0, -cos(angle_array[2]), 0,
+        0, 1, 1, link[3],
         0, 0, 0, 1;
 
-    H3_4 << cos(angle_array[3]), sin(angle_array[3]), 0, 0,
-        sin(angle_array[3]), -cos(angle_array[3]), 0, 0,
-        0, 0, 1, link[4],
+    H3_4 << cos(angle_array[3]), 0, -sin(angle_array[3]), link[4] * cos(angle_array[3]),
+        sin(angle_array[3]), 0, cos(angle_array[3]), link[4] * sin(angle_array[3]),
+        0, -1, 0, 0,
         0, 0, 0, 1;
 
-    H4_5 << cos(angle_array[4]), sin(angle_array[4]), 0, 0,
-        sin(angle_array[4]), -cos(angle_array[4]), 0, 0,
-        0, 0, 1, link[5],
+    H4_5 << cos(angle_array[4]), 0, sin(angle_array[4]), 0,
+        sin(angle_array[4]), 0, -cos(angle_array[4]), 0,
+        0, 1, 0, link[5],
         0, 0, 0, 1;
 
-    H5_6 << cos(angle_array[5]), sin(angle_array[5]), 0, 0,
-        sin(angle_array[5]), -cos(angle_array[5]), 0, 0,
-        0, 0, 1, link[6],
+    H5_6 << cos(angle_array[5]), 0, -sin(angle_array[5]), link[6] * cos(angle_array[5]),
+        sin(angle_array[5]), 0, cos(angle_array[5]), link[6] * sin(angle_array[5]),
+        0, -1, 0, 0,
         0, 0, 0, 1;
 
     H6_7 << cos(angle_array[6]), -sin(angle_array[6]), 0, 0,
@@ -547,7 +547,7 @@ int getCranex7EstimatedExtForces(double *angle_array, double *torque_array, doub
     std::cout << "J5" << std::endl
               << J5 << std::endl;
 
-    //return 0;
+    // return 0;
 
     // Jacobian matrix
     // std::cout << "Jacobian matrix" << std::endl;
@@ -580,8 +580,8 @@ int getCranex7EstimatedExtForces(double *angle_array, double *torque_array, doub
     // Create Pseudo Inverse of Jacobian matrix
     // std::cout << "Pseudo Inverse Jacobian matrix" << std::endl;
 
-    Eigen::MatrixXd J7DOF_PseudoInv = J7DOF.completeOrthogonalDecomposition().pseudoInverse();
-    // Eigen::MatrixXd J7DOF_PseudoInv = J7DOF.transpose() * (J7DOF * J7DOF.transpose()).inverse();
+    // Eigen::MatrixXd J7DOF_PseudoInv = J7DOF.completeOrthogonalDecomposition().pseudoInverse();
+    Eigen::MatrixXd J7DOF_PseudoInv = J7DOF.transpose() * (J7DOF * J7DOF.transpose()).inverse();
 
     std::cout << "The determinant of J7DOF * J7DOF.transpose() is " << (J7DOF * J7DOF.transpose()).determinant() << std::endl;
 
@@ -618,8 +618,8 @@ int getCranex7EstimatedExtForces(double *angle_array, double *torque_array, doub
 
     // std::cout << "Force Moment" << std::endl;
 
-    Eigen::VectorXd ForceMoment = J7DOF_PseudoInv.transpose().completeOrthogonalDecomposition().solve(Torque);
-    // Eigen::VectorXd ForceMoment = J7DOF_PseudoInv.transpose() * Torque;
+    // Eigen::VectorXd ForceMoment = J7DOF_PseudoInv.transpose().completeOrthogonalDecomposition().solve(Torque);
+    Eigen::VectorXd ForceMoment = J7DOF_PseudoInv.transpose() * Torque;
 
     for (int i = 0; i < 6; i++)
     {

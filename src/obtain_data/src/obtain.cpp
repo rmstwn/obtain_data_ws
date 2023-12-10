@@ -292,6 +292,8 @@ int main(int argc, char *argv[])
     double present_torquee[7] = {0, -0.0842427, 0, 0, 0, 0.0997624, 0};
 
     getCranex7EstimatedExtForces(th_radd, present_torquee, forces);
+    std::cout << " Estimated forces || "
+              << " Fx : " << forces[0] << " || Fy : " << forces[1] << " || Fz : " << forces[2] << std::endl;
 
     return 0;
 }
