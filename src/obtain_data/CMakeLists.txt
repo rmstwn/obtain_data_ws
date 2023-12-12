@@ -21,6 +21,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   eigen3_cmake_module
   dynamixel_sdk_custom_interfaces
   dynamixel_sdk
+  custom_interfaces
 )
 
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})

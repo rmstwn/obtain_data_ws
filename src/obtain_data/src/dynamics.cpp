@@ -10,6 +10,14 @@
 #include "obtain_data/crane_x7_comm.hpp"
 #include "obtain_data/dynamics.hpp"
 
+#define EIGEN_INITIALIZE_MATRICES_BY_NAN
+
+double computeFrictionTerm(double omg)
+{
+    // Check if omg is 0, return 0.0 in that case, otherwise, use std::copysign
+    return (omg == 0.0) ? 0.0 : std::copysign(1.0, omg);
+}
+
 /**
  * @fn int getCranex7EstimatedTorque(double *, double *, double *, double *)
  * @brief Function to get joint torque estimation
@@ -74,9 +82,9 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     // std::cout << "mot0.size() = " << mot0.size() << std::endl;
 
     // Assign values to mot0
-    mot0[0] = std::copysign(1.0, omg0);                              // 0st axis friction term 1
-    mot0[1] = std::copysign(1.0, omg0) * std::sqrt(std::fabs(omg0)); // 0st axis friction term 2
-    mot0[14] = 1.0;                                                  // Positive constant 1 (Note: MATLAB index 15 corresponds to C++ index 14)
+    mot0[0] = computeFrictionTerm(omg0);                              // 0st axis friction term 1
+    mot0[1] = computeFrictionTerm(omg0) * std::sqrt(std::fabs(omg0)); // 0st axis friction term 2
+    mot0[14] = 1.0;                                                   // Positive constant 1 (Note: MATLAB index 15 corresponds to C++ index 14)
 
     // Print the values of mot0 for verification
     // for (int i = 0; i < mot0.size(); ++i)
@@ -85,8 +93,8 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     // }
 
     // Assign values to mot1
-    mot1[2] = std::copysign(1.0, omg1);                                                                                                                                                                                                                                                                        // 1st axis friction term 3 Vel 2
-    mot1[3] = std::copysign(1.0, omg1) * std::sqrt(std::fabs(omg1));                                                                                                                                                                                                                                           // 1st axis friction term 4 Vel 2                                                                                                                                                                                                                                  // 1st axis friction term 4 Vel 2
+    mot1[2] = computeFrictionTerm(omg1);                                                                                                                                                                                                                                                                       // 1st axis friction term 3 Vel 2
+    mot1[3] = computeFrictionTerm(omg1) * std::sqrt(std::fabs(omg1));                                                                                                                                                                                                                                          // 1st axis friction term 4 Vel 2                                                                                                                                                                                                                                  // 1st axis friction term 4 Vel 2
     mot1[15] = 1.0;                                                                                                                                                                                                                                                                                            // Positive constant 2
     mot1[21] = -std::sin(th1);                                                                                                                                                                                                                                                                                 // Param Mot 1
     mot1[22] = std::cos(th1) * std::cos(th2) * std::cos(th3) - std::sin(th1) * std::sin(th3);                                                                                                                                                                                                                  // Param Mot 2
@@ -100,8 +108,8 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     // }
 
     // Assign values to mot2
-    mot2[4] = std::copysign(1.0, omg2);                                                                                                                                                                                       // 1st axis friction term 3 Vel 2
-    mot2[5] = std::copysign(1.0, omg2) * std::sqrt(std::fabs(omg2));                                                                                                                                                          // 2nd axis friction term 6 Vel 3
+    mot2[4] = computeFrictionTerm(omg2);                                                                                                                                                                                      // 1st axis friction term 3 Vel 2
+    mot2[5] = computeFrictionTerm(omg2) * std::sqrt(std::fabs(omg2));                                                                                                                                                         // 2nd axis friction term 6 Vel 3
     mot2[16] = 1.0;                                                                                                                                                                                                           // Positive constant 3 (1.0 for the 3rd constant)
     mot2[22] = -std::cos(th3) * std::sin(th1) * std::sin(th2);                                                                                                                                                                // Param Mot 2
     mot2[23] = std::sin(th1) * std::sin(th2) * std::sin(th3);                                                                                                                                                                 // Param Mot 3
@@ -114,8 +122,8 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     // }
 
     // Assign values to mot3
-    mot3[6] = std::copysign(1.0, omg3);                                                                                                                                                                                                                                        // 1st axis friction term 7 Vel 4
-    mot3[7] = std::copysign(1.0, omg3) * std::sqrt(std::fabs(omg3));                                                                                                                                                                                                           // 3rd axis friction term 8 Vel 4
+    mot3[6] = computeFrictionTerm(omg3);                                                                                                                                                                                                                                       // 1st axis friction term 7 Vel 4
+    mot3[7] = computeFrictionTerm(omg3) * std::sqrt(std::fabs(omg3));                                                                                                                                                                                                          // 3rd axis friction term 8 Vel 4
     mot3[17] = 1.0;                                                                                                                                                                                                                                                            // Positive constant 4 (1.0 for the 4th constant)
     mot3[22] = std::cos(th1) * std::cos(th3) - std::cos(th2) * std::sin(th1) * std::sin(th3);                                                                                                                                                                                  // Param Mot 2
     mot3[23] = -std::cos(th1) * std::sin(th3) - std::cos(th2) * std::cos(th3) * std::sin(th1);                                                                                                                                                                                 // Param Mot 3
@@ -128,8 +136,8 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     // }
 
     // Assign values to mot4
-    mot4[8] = std::copysign(1.0, omg4);                                                                                                                                                                                       // 3rd axis friction term 9 Vel 5
-    mot4[9] = std::copysign(1.0, omg4) * std::sqrt(std::fabs(omg4));                                                                                                                                                          // 3rd axis friction term 10 Vel 5
+    mot4[8] = computeFrictionTerm(omg4);                                                                                                                                                                                      // 3rd axis friction term 9 Vel 5
+    mot4[9] = computeFrictionTerm(omg4) * std::sqrt(std::fabs(omg4));                                                                                                                                                         // 3rd axis friction term 10 Vel 5
     mot4[18] = 1.0;                                                                                                                                                                                                           // Positive constant 5 (1.0 for the 5th constant)
     mot4[24] = std::cos(th4) * std::sin(th1) * std::sin(th2) * std::sin(th5) + std::cos(th1) * std::sin(th3) * std::sin(th4) * std::sin(th5) + std::cos(th2) * std::cos(th3) * std::sin(th1) * std::sin(th4) * std::sin(th5); // Param Mot 4
 
@@ -140,8 +148,8 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     // }
 
     // Assign values to mot5
-    mot5[10] = std::copysign(1.0, omg5);                                                                                                                                                                                                                                                                                                      // 3rd axis friction term 11 Vel 6
-    mot5[11] = std::copysign(1.0, omg5) * std::sqrt(std::fabs(omg5));                                                                                                                                                                                                                                                                         // 3rd axis friction term 12 Vel 6
+    mot5[10] = computeFrictionTerm(omg5);                                                                                                                                                                                                                                                                                                     // 3rd axis friction term 11 Vel 6
+    mot5[11] = computeFrictionTerm(omg5) * std::sqrt(std::fabs(omg5));                                                                                                                                                                                                                                                                        // 3rd axis friction term 12 Vel 6
     mot5[19] = 1.0;                                                                                                                                                                                                                                                                                                                           // Positive constant 6 (1.0 for the 6th constant)
     mot5[24] = std::cos(th2) * std::sin(th1) * std::sin(th3) * std::sin(th5) - std::cos(th1) * std::cos(th3) * std::sin(th5) - std::cos(th1) * std::cos(th4) * std::cos(th5) * std::sin(th3) + std::cos(th5) * std::sin(th1) * std::sin(th2) * std::sin(th4) - std::cos(th2) * std::cos(th3) * std::cos(th4) * std::cos(th5) * std::sin(th1); // Param Mot 4
 
@@ -152,8 +160,8 @@ int getCranex7EstimatedTorque(double *angle_array, double *vel_array, double *to
     // }
 
     // Assign values to mot6
-    mot6[12] = std::copysign(1.0, omg6);                              // 3rd axis friction term 13 Vel 5
-    mot6[13] = std::copysign(1.0, omg6) * std::sqrt(std::fabs(omg6)); // 3rd axis friction term 14 Vel 5
+    mot6[12] = computeFrictionTerm(omg6);                              // 3rd axis friction term 13 Vel 5
+    mot6[13] = computeFrictionTerm(omg6) * std::sqrt(std::fabs(omg6)); // 3rd axis friction term 14 Vel 5
     mot6[20] = 1.0;
 
     // // Print the values of mot6 for verification
@@ -352,7 +360,9 @@ int getCranex7EstimatedExtForces(double *angle_array, double *torque_array, doub
 
     // link << 41, 105, 170, 355, 476, 605, 624;
     // link << 41, 64, 65, 185, 121, 129, 19, 84;
-    link << 4.1, 6.4, 6.5, 18.5, 12.1, 12.9, 1.9, 8.4;
+    // link << 4.1, 6.4, 6.5, 18.5, 12.1, 12.9, 1.9, 8.4;
+
+    link << 0.041, 0.064, 0.065, 0.185, 0.121, 0.129, 0.019, 0.084;
 
     // Homogeneous Transformation Matrix
     Eigen::MatrixXd H0_0(4, 4);
@@ -371,7 +381,7 @@ int getCranex7EstimatedExtForces(double *angle_array, double *torque_array, doub
 
     H0_1 << cos(angle_array[0]), 0, sin(angle_array[0]), 0,
         sin(angle_array[0]), 0, -cos(angle_array[0]), 0,
-        0, 0, 1, link[1],
+        0, 1, 0, link[1],
         0, 0, 0, 1;
 
     H1_2 << cos(angle_array[1]), 0, -sin(angle_array[1]), link[2] * cos(angle_array[1]),
@@ -544,17 +554,17 @@ int getCranex7EstimatedExtForces(double *angle_array, double *torque_array, doub
     Eigen::Vector3d J5 = JR0_5_cross.cross(Jd0_5_cross);
     Eigen::Vector3d J6 = JR0_6_cross.cross(Jd0_6_cross);
 
-    std::cout << "J5" << std::endl
-              << J5 << std::endl;
+    // std::cout << "J5" << std::endl
+    //           << J5 << std::endl;
 
     // return 0;
 
     // Jacobian matrix
     // std::cout << "Jacobian matrix" << std::endl;
 
-    Eigen::MatrixXd J7DOF(6, 7);
+    Eigen::MatrixXd J(6, 7);
 
-    J7DOF << J0(0, 0), J1(0, 0), J2(0, 0), J3(0, 0), J4(0, 0), J5(0, 0), J6(0, 0),
+    J << J0(0, 0), J1(0, 0), J2(0, 0), J3(0, 0), J4(0, 0), J5(0, 0), J6(0, 0),
         J0(1, 0), J1(1, 0), J2(1, 0), J3(1, 0), J4(1, 0), J5(1, 0), J6(1, 0),
         J0(2, 0), J1(2, 0), J2(2, 0), J3(2, 0), J4(2, 0), J5(2, 0), J6(2, 0),
         JR0_0(0, 0), JR0_1(0, 0), JR0_2(0, 0), JR0_3(0, 0), JR0_4(0, 0), JR0_5(0, 0), JR0_6(0, 0),
@@ -562,72 +572,60 @@ int getCranex7EstimatedExtForces(double *angle_array, double *torque_array, doub
         JR0_0(2, 0), JR0_1(2, 0), JR0_2(2, 0), JR0_3(2, 0), JR0_4(2, 0), JR0_5(2, 0), JR0_6(2, 0);
     ;
 
-    // J7DOF << J0(0, 0), J1(0, 0), J2(0, 0), J3(0, 0), J4(0, 0), J5(0, 0),
+    // J << J0(0, 0), J1(0, 0), J2(0, 0), J3(0, 0), J4(0, 0), J5(0, 0),
     //     J0(1, 0), J1(1, 0), J2(1, 0), J3(1, 0), J4(1, 0), J5(1, 0),
     //     J0(2, 0), J1(2, 0), J2(2, 0), J3(2, 0), J4(2, 0), J5(2, 0),
     //     JR0_0(0, 0), JR0_1(0, 0), JR0_2(0, 0), JR0_3(0, 0), JR0_4(0, 0), JR0_5(0, 0),
     //     JR0_0(1, 0), JR0_1(1, 0), JR0_2(1, 0), JR0_3(1, 0), JR0_4(1, 0), JR0_5(1, 0),
     //     JR0_0(2, 0), JR0_1(2, 0), JR0_2(2, 0), JR0_3(2, 0), JR0_4(2, 0), JR0_5(2, 0);
-    ;
+    //;
 
-    std::cout << "J7DOF.size() = " << J7DOF.size() << std::endl;
-    std::cout << "J7DOF.rows() = " << J7DOF.rows() << std::endl;
-    std::cout << "J7DOF.cols() = " << J7DOF.cols() << std::endl;
+    // std::cout << "J.size() = " << J.size() << std::endl;
+    // std::cout << "J.rows() = " << J.rows() << std::endl;
+    // std::cout << "J.cols() = " << J.cols() << std::endl;
 
-    std::cout << "J7DOF" << std::endl
-              << J7DOF << std::endl;
-
-    // Create Pseudo Inverse of Jacobian matrix
-    // std::cout << "Pseudo Inverse Jacobian matrix" << std::endl;
-
-    // Eigen::MatrixXd J7DOF_PseudoInv = J7DOF.completeOrthogonalDecomposition().pseudoInverse();
-    Eigen::MatrixXd J7DOF_PseudoInv = J7DOF.transpose() * (J7DOF * J7DOF.transpose()).inverse();
-
-    std::cout << "The determinant of J7DOF * J7DOF.transpose() is " << (J7DOF * J7DOF.transpose()).determinant() << std::endl;
-
-    std::cout << "J7DOF_PseudoInv.size() = " << J7DOF_PseudoInv.size() << std::endl;
-    std::cout << "J7DOF_PseudoInv.rows() = " << J7DOF_PseudoInv.rows() << std::endl;
-    std::cout << "J7DOF_PseudoInv.cols() = " << J7DOF_PseudoInv.cols() << std::endl;
-
-    std::cout << "J7DOF_PseudoInv" << std::endl
-              << J7DOF_PseudoInv << std::endl;
+    // std::cout << "J" << std::endl
+    //           << J << std::endl;
 
     // std::cout << " EoE Pos || "
     //           << " Xeoe : " << JH0_7(0, 3) << " || Yeoe : " << JH0_7(1, 3) << " || Zeoe : " << JH0_7(2, 3) << std::endl;
 
-    Eigen::VectorXd Torque(7);
+    Eigen::VectorXd tau(7);
 
-    Torque(0) = torque_array[0];
-    Torque(1) = torque_array[1];
-    Torque(2) = torque_array[2];
-    Torque(3) = torque_array[3];
-    Torque(4) = torque_array[4];
-    Torque(5) = torque_array[5];
-    Torque(6) = torque_array[6];
+    tau << torque_array[0], torque_array[1], torque_array[2], torque_array[3], torque_array[4], torque_array[5], torque_array[6];
 
-    // std::cout << "Torque" << std::endl
-    //           << Torque << std::endl;
+    // std::cout << "tau" << std::endl
+    //           << tau << std::endl;
 
-    // std::cout << "Before ForceMoment" << std::endl;
+    //////////////// Create Pseudo Inverse of Jacobian matrix ////////////////
+    // std::cout << "Pseudo Inverse Jacobian matrix" << std::endl;
 
-    // std::cout << "J7DOF_PseudoInvT" << std::endl
-    //           << J7DOF_PseudoInvT << std::endl;
+    // Eigen::MatrixXd J_PseudoInv = J.completeOrthogonalDecomposition().pseudoInverse();
+    // Eigen::MatrixXd J_PseudoInv = J.transpose() * (J * J.transpose()).inverse();
 
-    // std::cout << "ErrTorque" << std::endl
-    //           << ErrTorque << std::endl;
+    // std::cout << "The determinant of J * J.transpose() is " << (J * J.transpose()).determinant() << std::endl;
 
-    // std::cout << "Force Moment" << std::endl;
+    // std::cout << "J_PseudoInv.size() = " << J_PseudoInv.size() << std::endl;
+    // std::cout << "J_PseudoInv.rows() = " << J_PseudoInv.rows() << std::endl;
+    // std::cout << "J_PseudoInv.cols() = " << J_PseudoInv.cols() << std::endl;
 
-    // Eigen::VectorXd ForceMoment = J7DOF_PseudoInv.transpose().completeOrthogonalDecomposition().solve(Torque);
-    Eigen::VectorXd ForceMoment = J7DOF_PseudoInv.transpose() * Torque;
+    // std::cout << "J_PseudoInv" << std::endl
+    //           << J_PseudoInv << std::endl;
+
+    // std::cout << "Jacobian Matrix (J) dimensions: " << J.rows() << " x " << J.cols() << std::endl;
+    // std::cout << "Joint Torques (tau) dimensions: " << tau.rows() << " x " << tau.cols() << std::endl;
+
+    // Eigen::VectorXd F = J_PseudoInv.transpose().completeOrthogonalDecomposition().solve(Torque);
+
+    //////////////// Calculate end-effector forces using DLS ////////////////
+    double damping_factor = 0.01; // Need to adjust this based on your system
+
+    Eigen::MatrixXd J_pseudo_inv = (J.transpose() * J + damping_factor * Eigen::MatrixXd::Identity(7, 7)).inverse() * J.transpose();
+    // Eigen::VectorXd F = J_pseudo_inv * Torque;
+    Eigen::VectorXd F = J_pseudo_inv.completeOrthogonalDecomposition().solve(tau);
 
     for (int i = 0; i < 6; i++)
     {
-        est_force_array[i] = ForceMoment(i);
+        est_force_array[i] = F(i);
     }
-
-    // std::cout << ForceMoment(0) << ForceMoment(1) << ForceMoment(2) << ForceMoment(3) << ForceMoment(4) << ForceMoment(5) << std::endl;
-
-    // std::cout << "ForceMoment ||"
-    //           << " " << ForceMoment[0] << " " << ForceMoment[1] << " " << ForceMoment[2] << " " << ForceMoment[3] << " " << ForceMoment[4] << " " << ForceMoment[5] << " " << ForceMoment[6] << " " << std::endl;
 }

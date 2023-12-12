@@ -28,6 +28,8 @@
 #include "dynamixel_sdk_custom_interfaces/msg/set_current.hpp"
 #include "dynamixel_sdk_custom_interfaces/srv/get_current.hpp"
 
+#include "custom_interfaces/msg/eoe_state.hpp"
+
 #include "obtain_data/dynamixel_node.hpp"
 #include "obtain_data/crane_x7_comm.hpp"
 #include "obtain_data/dynamics.hpp"
@@ -40,6 +42,7 @@ using namespace std::chrono_literals;
 // Set up parameters
 const std::string JOINTSTATE_TOPIC = "/joint_state";
 const std::string ESTJOINTSTATE_TOPIC = "/est_joint_state";
+const std::string EOESTATE_TOPIC = "/eoe_state";
 
 // Frequency wave
 float Fc_1[] = {0.1166, 0.1263, 0.1451, 0.1602, 0.1654, 0.1689, 0.1748};
@@ -66,6 +69,8 @@ double th_dd[JOINT_NUM][MAX_DATA];
 double th_run[JOINT_NUM];
 double th_rad[JOINT_NUM];
 
+double forces[6];
+
 class DynamixelStatePublisher : public rclcpp::Node
 {
 
@@ -76,6 +81,9 @@ public:
         // Setup pub/sub
         joint_pub_ = create_publisher<sensor_msgs::msg::JointState>(JOINTSTATE_TOPIC, rclcpp::SystemDefaultsQoS());
         est_joint_pub_ = create_publisher<sensor_msgs::msg::JointState>(ESTJOINTSTATE_TOPIC, rclcpp::SystemDefaultsQoS());
+
+        eoe_pub_ = create_publisher<custom_interfaces::msg::EoeState>(EOESTATE_TOPIC, rclcpp::SystemDefaultsQoS());
+
         timer_ = this->create_wall_timer(
             1ms, std::bind(&DynamixelStatePublisher::timer_callback, this));
     }
@@ -84,6 +92,7 @@ private:
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_pub_;
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr est_joint_pub_;
+    rclcpp::Publisher<custom_interfaces::msg::EoeState>::SharedPtr eoe_pub_;
 
     // JointState jointState;
 
@@ -145,25 +154,25 @@ private:
             initilizeCranex7(operating_mode);
             setCranex7TorqueState(TORQUE_ENABLE);
 
-            safe_start(20);
+            // safe_start(20);
 
             for (j = 0; j < MAX_DATA; j++)
             // while(1)
             {
-                for (i = 0; i < 7; i++)
-                {
-                    // need to convert joint 4 57.5 to -57.5 to 0 115
-                    if (i == 3)
-                    {
-                        th_run[i] = map_range(th[i][j], 57.5, -57.5, 0, -115);
-                        th_rad[i] = th_run[i] * (M_PI / 180);
-                    }
-                    else
-                    {
-                        th_run[i] = th[i][j];
-                        th_rad[i] = th_run[i] * (M_PI / 180);
-                    }
-                }
+                // for (i = 0; i < 7; i++)
+                // {
+                //     // need to convert joint 4 57.5 to -57.5 to 0 115
+                //     if (i == 3)
+                //     {
+                //         th_run[i] = map_range(th[i][j], 57.5, -57.5, 0, -115);
+                //         th_rad[i] = th_run[i] * (M_PI / 180);
+                //     }
+                //     else
+                //     {
+                //         th_run[i] = th[i][j];
+                //         th_rad[i] = th_run[i] * (M_PI / 180);
+                //     }
+                // }
 
                 // th_run[0] = 0
                 // th_run[1] = 10;
@@ -173,9 +182,31 @@ private:
                 // th_run[5] = 0;
                 // th_run[6] = 0;
 
+                th_run[0] = 0;
+                th_run[1] = 40;
+                th_run[2] = 0;
+                th_run[3] = -100;
+                th_run[4] = 0;
+                th_run[5] = 0;
+                th_run[6] = 0;
+
+                // th_run[0] = 0;
+                // th_run[1] = 0;
+                // th_run[2] = 0;
+                // th_run[3] = s0;
+                // th_run[4] = 0;
+                // th_run[5] = 0;
+                // th_run[6] = 0;
+
+                for (i = 0; i < 7; i++)
+                {
+                    th_rad[i] = th_run[i] * (M_PI / 180);
+                }
+
                 // usleep(50000);
                 setCranex7Angle(th_run);
                 // getCranex7JointState(present_theta, present_angvel, present_torque);
+                getCranex7Position(present_theta);
                 getCranex7Velocity(present_angvel);
                 getCranex7Torque(present_torque);
 
@@ -196,7 +227,7 @@ private:
                 // std::cout << j << " " << present_angvel[0] << " " << present_angvel[1] << " " << present_angvel[2] << " " << present_angvel[3] << " " << present_angvel[4] << " " << present_angvel[5] << " " << present_angvel[6] << " " << present_angvel[7] << std::endl;
                 // std::cout << "Feedback || " << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
 
-                getCranex7EstimatedTorque(th_rad, present_angvel, present_torque, estimated_torque);
+                getCranex7EstimatedTorque(present_theta, present_angvel, present_torque, estimated_torque);
 
                 // std::cout << j << " " << present_theta[0] << " " << present_theta[1] << " " << present_theta[2] << " " << present_theta[3] << " " << present_theta[4] << " " << present_theta[5] << " " << present_theta[6] << " " << present_theta[7] << std::endl;
                 // std::cout << j << " " << present_torque[0] << " " << present_torque[1] << " " << present_torque[2] << " " << present_torque[3] << " " << present_torque[4] << " " << present_torque[5] << " " << present_torque[6] << " " << present_torque[7] << std::endl;
@@ -206,26 +237,33 @@ private:
                 // Calculate Joint torque error between estimated and real
                 for (int i = 0; i < 7; i++)
                 {
-                    error_torque[i] = abs(estimated_torque[i] - present_torque[i]);
+                    error_torque[i] = estimated_torque[i] - present_torque[i];
                 }
 
-                std::cout << "Error || " << j << " " << error_torque[0] << " " << error_torque[1] << " " << error_torque[2] << " " << error_torque[3] << " " << error_torque[4] << " " << error_torque[5] << " " << error_torque[6] << " " << error_torque[7] << std::endl;
+                // std::cout << "Error || " << j << " " << error_torque[0] << " " << error_torque[1] << " " << error_torque[2] << " " << error_torque[3] << " " << error_torque[4] << " " << error_torque[5] << " " << error_torque[6] << " " << error_torque[7] << std::endl;
 
                 // if (error_torque[0] >= 1.00 || error_torque[1] >= 1.00 || error_torque[2] >= 1.00 || error_torque[3] >= 1.00 || error_torque[4] >= 1.00 || error_torque[5] >= 1.00 || error_torque[6] >= 1.00 || error_torque[7] >= 1.00)
                 // {
                 //     break;
                 // }
 
-                if (*std::max_element(error_torque, error_torque + 8) >= 1.50)
-                {
-                    // Break if any element is greater than or equal to 1.00
-                    std::cout << "Collision!!!!!!" << std::endl;
-                    break;
-                }
+                // if (*std::max_element(error_torque, error_torque + 8) >= 1.00)
+                // {
+                //     // Break if any element is greater than or equal to 1.00
+                //     std::cout << "Collision" << *std::max_element(error_torque, error_torque + 8) << std::endl;
+                //     break;
+                // }
+
+                getCranex7EstimatedExtForces(th_rad, error_torque, forces);
+
+                // std::cout << j << " Estimated forces || "
+                //           << " Fx : " << forces[0] << " || Fy : " << forces[1] << " || Fz : " << forces[2] << std::endl;
 
                 // Create the messages we might publish Joint state data
                 auto joint_msg = std::make_unique<sensor_msgs::msg::JointState>();
                 auto est_joint_msg = std::make_unique<sensor_msgs::msg::JointState>();
+
+                auto eoe_msg = std::make_unique<custom_interfaces::msg::EoeState>();
 
                 joint_msg->name.resize(JOINT_NUM);
                 joint_msg->position.resize(JOINT_NUM);
@@ -237,14 +275,18 @@ private:
                 est_joint_msg->velocity.resize(JOINT_NUM);
                 est_joint_msg->effort.resize(JOINT_NUM);
 
+                eoe_msg->force.resize(3);
+                eoe_msg->moment.resize(3);
+
                 joint_msg->header.frame_id = "CraneX7";
                 est_joint_msg->header.frame_id = "Estimated_CraneX7";
+                eoe_msg->header.frame_id = "CraneX7_EoE_Force";
 
                 for (int i = 0; i < JOINT_NUM; i++)
                 {
                     joint_msg->name[i] = "cranex7_j" + std::to_string(i);
 
-                    // joint_msg->position[i] = present_theta[i];
+                    joint_msg->position[i] = present_theta[i];
                     joint_msg->velocity[i] = present_angvel[i];
                     joint_msg->effort[i] = present_torque[i];
                 }
@@ -258,11 +300,22 @@ private:
                     est_joint_msg->effort[i] = estimated_torque[i];
                 }
 
+                eoe_msg->force[0] = forces[0];
+                eoe_msg->force[1] = forces[1];
+                eoe_msg->force[2] = forces[2];
+
+                eoe_msg->moment[0] = forces[3];
+                eoe_msg->moment[1] = forces[4];
+                eoe_msg->moment[2] = forces[5];
+
                 joint_msg->header.stamp = now();
                 joint_pub_->publish(std::move(joint_msg));
 
                 est_joint_msg->header.stamp = now();
                 est_joint_pub_->publish(std::move(est_joint_msg));
+
+                eoe_msg->header.stamp = now();
+                eoe_pub_->publish(std::move(eoe_msg));
 
                 // usleep(1000);
                 // usleep(100000);

@@ -533,28 +533,28 @@ void safe_start(int velocity)
         //     param_goal_position[i][3] = DXL_HIBYTE(DXL_HIWORD((int)map_range(0, -180, 180, 0, 4096)));
         // }
 
-        // if (i == 3)
-        // {
-        //     // Allocate goal position value into byte array
-        //     param_goal_position[i][0] = DXL_LOBYTE(DXL_LOWORD((int)map_range(-57.5, 180, -180, 4096, 0)));
-        //     param_goal_position[i][1] = DXL_HIBYTE(DXL_LOWORD((int)map_range(-57.5, 180, -180, 4096, 0)));
-        //     param_goal_position[i][2] = DXL_LOBYTE(DXL_HIWORD((int)map_range(-57.5, 180, -180, 4096, 0)));
-        //     param_goal_position[i][3] = DXL_HIBYTE(DXL_HIWORD((int)map_range(-57.5, 180, -180, 4096, 0)));
-        // }
-        // else
-        // {
-        //     // Allocate goal position value into byte array
-        //     param_goal_position[i][0] = DXL_LOBYTE(DXL_LOWORD((int)map_range(0, 180, -180, 4096, 0)));
-        //     param_goal_position[i][1] = DXL_HIBYTE(DXL_LOWORD((int)map_range(0, 180, -180, 4096, 0)));
-        //     param_goal_position[i][2] = DXL_LOBYTE(DXL_HIWORD((int)map_range(0, 180, -180, 4096, 0)));
-        //     param_goal_position[i][3] = DXL_HIBYTE(DXL_HIWORD((int)map_range(0, 180, -180, 4096, 0)));
-        // }
+        if (i == 3)
+        {
+            // Allocate goal position value into byte array
+            param_goal_position[i][0] = DXL_LOBYTE(DXL_LOWORD((int)map_range(-57.5, 180, -180, 4096, 0)));
+            param_goal_position[i][1] = DXL_HIBYTE(DXL_LOWORD((int)map_range(-57.5, 180, -180, 4096, 0)));
+            param_goal_position[i][2] = DXL_LOBYTE(DXL_HIWORD((int)map_range(-57.5, 180, -180, 4096, 0)));
+            param_goal_position[i][3] = DXL_HIBYTE(DXL_HIWORD((int)map_range(-57.5, 180, -180, 4096, 0)));
+        }
+        else
+        {
+            // Allocate goal position value into byte array
+            param_goal_position[i][0] = DXL_LOBYTE(DXL_LOWORD((int)map_range(0, 180, -180, 4096, 0)));
+            param_goal_position[i][1] = DXL_HIBYTE(DXL_LOWORD((int)map_range(0, 180, -180, 4096, 0)));
+            param_goal_position[i][2] = DXL_LOBYTE(DXL_HIWORD((int)map_range(0, 180, -180, 4096, 0)));
+            param_goal_position[i][3] = DXL_HIBYTE(DXL_HIWORD((int)map_range(0, 180, -180, 4096, 0)));
+        }
 
-        // Allocate goal position value into byte array
-        param_goal_position[i][0] = DXL_LOBYTE(DXL_LOWORD((int)map_range(0, 180, -180, 4096, 0)));
-        param_goal_position[i][1] = DXL_HIBYTE(DXL_LOWORD((int)map_range(0, 180, -180, 4096, 0)));
-        param_goal_position[i][2] = DXL_LOBYTE(DXL_HIWORD((int)map_range(0, 180, -180, 4096, 0)));
-        param_goal_position[i][3] = DXL_HIBYTE(DXL_HIWORD((int)map_range(0, 180, -180, 4096, 0))); 
+        // // Allocate goal position value into byte array
+        // param_goal_position[i][0] = DXL_LOBYTE(DXL_LOWORD((int)map_range(0, 180, -180, 4096, 0)));
+        // param_goal_position[i][1] = DXL_HIBYTE(DXL_LOWORD((int)map_range(0, 180, -180, 4096, 0)));
+        // param_goal_position[i][2] = DXL_LOBYTE(DXL_HIWORD((int)map_range(0, 180, -180, 4096, 0)));
+        // param_goal_position[i][3] = DXL_HIBYTE(DXL_HIWORD((int)map_range(0, 180, -180, 4096, 0))); 
 
         // std::cout << param_goal_position[i][0] << std::endl;
     }
